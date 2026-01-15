@@ -1,0 +1,10 @@
+{
+  "resources": {
+    "includes": [
+      {"pattern": "META-INF/services/io.jsonwebtoken.*"},
+      {"pattern": "META-INF/services/io.jsonwebtoken.io.Serializer"},
+      {"pattern": "META-INF/services/io.jsonwebtoken.io.Deserializer"},
+      {"pattern": "schema.sql"}
+    ]
+  }
+}

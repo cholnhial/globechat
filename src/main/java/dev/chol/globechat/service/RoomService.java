@@ -332,10 +332,11 @@ public class RoomService {
 
     /**
      * Get all room markers for the globe.
+     * Uses findAllWithAssociations to support GraalVM native image.
      */
     @Transactional(readOnly = true)
     public List<RoomMarkerDto> getAllRoomMarkers() {
-        return roomRepository.findAll().stream()
+        return roomRepository.findAllWithAssociations().stream()
                 .map(room -> RoomMarkerDto.from(room, memberRepository.countByChatRoom(room)))
                 .toList();
     }

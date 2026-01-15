@@ -12,19 +12,30 @@ import java.util.Optional;
 
 /**
  * Repository for ChatRoom entities.
+ * Queries use JOIN FETCH for lazy associations to support GraalVM native image.
  */
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     /**
      * Find a chat room by its unique join code.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    Optional<ChatRoom> findByJoinCode(String joinCode);
+    @Query("SELECT r FROM ChatRoom r " +
+           "JOIN FETCH r.owner " +
+           "LEFT JOIN FETCH r.currentMoodsic " +
+           "WHERE r.joinCode = :joinCode")
+    Optional<ChatRoom> findByJoinCode(@Param("joinCode") String joinCode);
 
     /**
      * Find all rooms owned by a specific user.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    List<ChatRoom> findByOwner(User owner);
+    @Query("SELECT DISTINCT r FROM ChatRoom r " +
+           "JOIN FETCH r.owner " +
+           "LEFT JOIN FETCH r.currentMoodsic " +
+           "WHERE r.owner = :owner")
+    List<ChatRoom> findByOwner(@Param("owner") User owner);
 
     /**
      * Check if a join code already exists.
@@ -33,14 +44,22 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     /**
      * Search rooms by title (case-insensitive).
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    @Query("SELECT r FROM ChatRoom r WHERE LOWER(r.title) LIKE LOWER(CONCAT('%', :query, '%'))")
+    @Query("SELECT DISTINCT r FROM ChatRoom r " +
+           "JOIN FETCH r.owner " +
+           "LEFT JOIN FETCH r.currentMoodsic " +
+           "WHERE LOWER(r.title) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<ChatRoom> searchByTitle(@Param("query") String query);
 
     /**
      * Find rooms with a specific moodsic currently playing.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    @Query("SELECT r FROM ChatRoom r WHERE r.currentMoodsic.id = :moodsicId")
+    @Query("SELECT DISTINCT r FROM ChatRoom r " +
+           "JOIN FETCH r.owner " +
+           "LEFT JOIN FETCH r.currentMoodsic " +
+           "WHERE r.currentMoodsic.id = :moodsicId")
     List<ChatRoom> findByCurrentMoodsicId(@Param("moodsicId") Long moodsicId);
 
     /**
@@ -48,4 +67,23 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
      */
     @Query("SELECT COUNT(m) FROM ChatRoomMember m WHERE m.chatRoom.id = :roomId")
     long countMembers(@Param("roomId") Long roomId);
+
+    /**
+     * Find a chat room by ID with all associations fetched.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
+     */
+    @Query("SELECT r FROM ChatRoom r " +
+           "JOIN FETCH r.owner " +
+           "LEFT JOIN FETCH r.currentMoodsic " +
+           "WHERE r.id = :id")
+    Optional<ChatRoom> findByIdWithAssociations(@Param("id") Long id);
+
+    /**
+     * Find all chat rooms with all associations fetched.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
+     */
+    @Query("SELECT DISTINCT r FROM ChatRoom r " +
+           "JOIN FETCH r.owner " +
+           "LEFT JOIN FETCH r.currentMoodsic")
+    List<ChatRoom> findAllWithAssociations();
 }

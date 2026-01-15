@@ -8,8 +8,11 @@ spring:
       minimum-idle: 5
   jpa:
     show-sql: false
-  flyway:
-    baseline-on-migrate: false
+    hibernate:
+      ddl-auto: none
+  sql:
+    init:
+      mode: always
 
 logging:
   level:

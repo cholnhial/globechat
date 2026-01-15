@@ -46,14 +46,22 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
 
     /**
      * Find all rooms a user has joined.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    @Query("SELECT m.chatRoom FROM ChatRoomMember m WHERE m.user = :user")
+    @Query("SELECT DISTINCT m.chatRoom FROM ChatRoomMember m " +
+           "JOIN FETCH m.chatRoom.owner " +
+           "LEFT JOIN FETCH m.chatRoom.currentMoodsic " +
+           "WHERE m.user = :user")
     List<ChatRoom> findRoomsByUser(@Param("user") User user);
 
     /**
      * Find all rooms where user has a specific role.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    @Query("SELECT m.chatRoom FROM ChatRoomMember m WHERE m.user = :user AND m.role = :role")
+    @Query("SELECT DISTINCT m.chatRoom FROM ChatRoomMember m " +
+           "JOIN FETCH m.chatRoom.owner " +
+           "LEFT JOIN FETCH m.chatRoom.currentMoodsic " +
+           "WHERE m.user = :user AND m.role = :role")
     List<ChatRoom> findRoomsByUserAndRole(@Param("user") User user, @Param("role") MemberRole role);
 
     /**

@@ -12,25 +12,42 @@ import java.util.List;
 
 /**
  * Repository for ChatMessage entities.
+ * Queries use JOIN FETCH for lazy associations to support GraalVM native image.
  */
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
 
     /**
      * Find all messages in a room ordered by creation time.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    List<ChatMessage> findByChatRoomOrderByCreatedAtAsc(ChatRoom chatRoom);
+    @Query("SELECT m FROM ChatMessage m " +
+           "JOIN FETCH m.sender " +
+           "JOIN FETCH m.chatRoom " +
+           "WHERE m.chatRoom = :chatRoom " +
+           "ORDER BY m.createdAt ASC")
+    List<ChatMessage> findByChatRoomOrderByCreatedAtAsc(@Param("chatRoom") ChatRoom chatRoom);
 
     /**
      * Find recent messages in a room (paginated).
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    @Query("SELECT m FROM ChatMessage m WHERE m.chatRoom = :room ORDER BY m.createdAt DESC")
+    @Query("SELECT m FROM ChatMessage m " +
+           "JOIN FETCH m.sender " +
+           "JOIN FETCH m.chatRoom " +
+           "WHERE m.chatRoom = :room " +
+           "ORDER BY m.createdAt DESC")
     List<ChatMessage> findRecentMessages(@Param("room") ChatRoom room, Pageable pageable);
 
     /**
      * Find the last N messages in a room.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    @Query("SELECT m FROM ChatMessage m WHERE m.chatRoom = :room ORDER BY m.createdAt DESC")
+    @Query("SELECT m FROM ChatMessage m " +
+           "JOIN FETCH m.sender " +
+           "JOIN FETCH m.chatRoom " +
+           "WHERE m.chatRoom = :room " +
+           "ORDER BY m.createdAt DESC")
     List<ChatMessage> findLastNMessages(@Param("room") ChatRoom room, Pageable pageable);
 
     /**

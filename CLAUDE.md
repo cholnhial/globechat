@@ -14,7 +14,7 @@ GlobeChat allows users to:
 
 ## Tech Stack
 
-- **Backend**: Spring Boot 4.x, Java 21, Spring Security (JWT), Spring WebSocket
+- **Backend**: Spring Boot 4.x, Java 25, Spring Security (JWT), Spring WebSocket
 - **Database**: PostgreSQL with Flyway migrations
 - **Frontend**: Angular 21 with MapLibre GL for 3D globe, STOMP WebSocket
 - **Build**: Maven with frontend-maven-plugin for Angular
