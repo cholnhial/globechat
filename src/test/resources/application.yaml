@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    locations: classpath:db/migration
+
+globechat:
+  jwt:
+    secret: test-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm
+    expiration-ms: 86400000
+  moodsic:
+    storage-path: ${java.io.tmpdir}/globechat-test-moodsics

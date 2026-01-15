@@ -1,0 +1,3 @@
+-- GlobeChat Initial Schema Baseline
+-- This migration intentionally left empty as baseline.
+-- Core entities are defined in V2__core_entities.sql

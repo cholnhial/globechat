@@ -1,0 +1,309 @@
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  ElementRef,
+  ViewChild,
+  AfterViewInit,
+  OnDestroy,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
+import { Map, Marker } from 'maplibre-gl';
+import { RoomMarker } from '../../../core/models';
+
+@Component({
+  selector: 'app-globe',
+  standalone: true,
+  template: `
+    <div class="globe-container">
+      <div #mapContainer class="map" [class.create-mode]="createMode"></div>
+      <div class="map-controls">
+        <button (click)="zoomIn()" title="Zoom in">+</button>
+        <button (click)="zoomOut()" title="Zoom out">−</button>
+        <button (click)="resetView()" title="Reset view">🌐</button>
+      </div>
+      @if (createMode) {
+        <div class="create-mode-hint">
+          <span class="pulse-dot"></span>
+          Click anywhere on the map to place your room
+        </div>
+      }
+    </div>
+  `,
+  styles: [`
+    .globe-container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+    }
+
+    .map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .map.create-mode {
+      cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='%2300ff88'%3E%3Cpath d='M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'/%3E%3C/svg%3E") 16 32, crosshair;
+    }
+
+    .map-controls {
+      position: absolute;
+      bottom: 30px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .map-controls button {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(10, 25, 47, 0.9);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      color: var(--neon-green);
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .map-controls button:hover {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: var(--neon-green);
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+    }
+
+    .create-mode-hint {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(10, 25, 47, 0.98) 0%, rgba(23, 42, 69, 0.98) 100%);
+      border: 2px solid #00ff88;
+      border-radius: 12px;
+      padding: 14px 28px;
+      color: #00ff88;
+      font-size: 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow:
+        0 0 25px rgba(0, 255, 136, 0.4),
+        0 4px 20px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.3s ease;
+    }
+
+    .pulse-dot {
+      width: 12px;
+      height: 12px;
+      background: var(--neon-green);
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.2); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+
+    :host ::ng-deep .maplibregl-canvas {
+      outline: none;
+    }
+
+    :host ::ng-deep .room-marker {
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    :host ::ng-deep .room-marker:hover {
+      transform: scale(1.2);
+    }
+
+    :host ::ng-deep .marker-container {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0a192f 0%, #172a45 100%);
+      border: 3px solid #00ff88;
+      border-radius: 50%;
+      box-shadow:
+        0 0 15px rgba(0, 255, 136, 0.6),
+        0 0 30px rgba(0, 255, 136, 0.3),
+        inset 0 0 10px rgba(0, 255, 136, 0.2);
+      font-size: 20px;
+    }
+
+    :host ::ng-deep .marker-container.selected {
+      border-color: #00d4ff;
+      box-shadow:
+        0 0 20px rgba(0, 212, 255, 0.8),
+        0 0 40px rgba(0, 212, 255, 0.4),
+        inset 0 0 15px rgba(0, 212, 255, 0.3);
+      transform: scale(1.2);
+    }
+  `]
+})
+export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
+  @ViewChild('mapContainer') mapContainer!: ElementRef;
+
+  @Input() markers: RoomMarker[] = [];
+  @Input() selectedMarker: RoomMarker | null = null;
+  @Input() createMode = false;
+
+  @Output() markerClicked = new EventEmitter<RoomMarker>();
+  @Output() mapClicked = new EventEmitter<{ lat: number; lng: number }>();
+
+  private map!: Map;
+  private mapMarkers = new window.Map<string, Marker>();
+
+  ngAfterViewInit(): void {
+    this.initMap();
+  }
+
+  ngOnDestroy(): void {
+    if (this.map) {
+      this.map.remove();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['markers'] && this.map) {
+      this.updateMarkers();
+    }
+    if (changes['selectedMarker'] && this.map) {
+      this.updateSelectedMarker();
+    }
+  }
+
+  private initMap(): void {
+    this.map = new Map({
+      container: this.mapContainer.nativeElement,
+      style: {
+        version: 8,
+        name: 'GlobeChat SciFi',
+        sources: {
+          'carto-positron': {
+            type: 'raster',
+            tiles: [
+              'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+              'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+              'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png',
+            ],
+            tileSize: 256,
+            attribution: '© OpenStreetMap contributors © CARTO',
+          },
+        },
+        layers: [
+          {
+            id: 'background',
+            type: 'background',
+            paint: {
+              'background-color': '#0d1b2a',
+            },
+          },
+          {
+            id: 'carto-positron',
+            type: 'raster',
+            source: 'carto-positron',
+            paint: {
+              'raster-opacity': 1,
+              'raster-saturation': 0.1,
+              'raster-brightness-min': 0.15,
+              'raster-brightness-max': 0.9,
+              'raster-contrast': 0.2,
+              'raster-hue-rotate': 160,
+            },
+          },
+        ],
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
+      },
+      center: [0, 20],
+      zoom: 2,
+      minZoom: 1,
+      maxZoom: 18,
+      attributionControl: false,
+    });
+
+    // Add globe projection for 3D effect
+    this.map.on('load', () => {
+
+      this.updateMarkers();
+    });
+
+    // Handle map clicks
+    this.map.on('click', (e) => {
+      this.mapClicked.emit({ lat: e.lngLat.lat, lng: e.lngLat.lng });
+    });
+  }
+
+  private updateMarkers(): void {
+    // Remove old markers
+    this.mapMarkers.forEach((marker) => marker.remove());
+    this.mapMarkers.clear();
+
+    // Add new markers
+    this.markers.forEach((roomMarker) => {
+      const el = document.createElement('div');
+      el.className = 'room-marker';
+      el.innerHTML = `
+        <div class="marker-container ${this.selectedMarker?.joinCode === roomMarker.joinCode ? 'selected' : ''}">
+          💬
+        </div>
+      `;
+
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.markerClicked.emit(roomMarker);
+      });
+
+      const marker = new Marker({ element: el })
+        .setLngLat([roomMarker.longitude, roomMarker.latitude])
+        .addTo(this.map);
+
+      this.mapMarkers.set(roomMarker.joinCode, marker);
+    });
+  }
+
+  private updateSelectedMarker(): void {
+    this.mapMarkers.forEach((marker, joinCode) => {
+      const el = marker.getElement();
+      const container = el.querySelector('.marker-container');
+      if (container) {
+        if (this.selectedMarker?.joinCode === joinCode) {
+          container.classList.add('selected');
+        } else {
+          container.classList.remove('selected');
+        }
+      }
+    });
+  }
+
+  zoomIn(): void {
+    this.map.zoomIn();
+  }
+
+  zoomOut(): void {
+    this.map.zoomOut();
+  }
+
+  resetView(): void {
+    this.map.flyTo({
+      center: [0, 20],
+      zoom: 2,
+      duration: 1500,
+    });
+  }
+}

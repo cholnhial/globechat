@@ -1,0 +1,15 @@
+package dev.chol.globechat.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
+/**
+ * Exception thrown when an operation is not permitted.
+ */
+@ResponseStatus(HttpStatus.FORBIDDEN)
+public class ForbiddenException extends RuntimeException {
+
+    public ForbiddenException(String message) {
+        super(message);
+    }
+}

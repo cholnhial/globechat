@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: globechat
+  profiles:
+    active: @spring.profiles.active@
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  flyway:
+    locations: classpath:db/migration
+    enabled: true
+    baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+globechat:
+  jwt:
+    secret: ${JWT_SECRET:dev-secret-key-must-be-at-least-256-bits-long-for-hs256-algorithm}
+    expiration-ms: 86400000
+  moodsic:
+    storage-path: ./moodsic-uploads
+
