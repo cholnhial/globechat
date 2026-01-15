@@ -14,16 +14,18 @@ import {
   AfterViewChecked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Room, RoomMember, ChatMessage, MemberRole } from '../../../core/models';
+import { Room, RoomMember, ChatMessage, MemberRole, Moodsic } from '../../../core/models';
 import { RoomService, ChatService, AuthService, ToastService } from '../../../core/services';
+import { MoodsicService } from '../../../core/services/moodsic.service';
 import { Subscription, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { formatDistanceToNow } from 'date-fns';
+import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component';
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, MoodsicModalComponent],
   template: `
     <div class="chat-window" [class.collapsed]="collapsed">
       <!-- Header -->
@@ -38,6 +40,11 @@ import { formatDistanceToNow } from 'date-fns';
             <span class="member-count">👥 {{ roomService.members().length }}</span>
           </div>
           <div class="header-actions">
+            @if (userRole() === 'OWNER') {
+              <button class="btn-icon btn-moodsic" (click)="showMoodsicModal.set(true)" title="Room Moodsic">
+                🎵
+              </button>
+            }
             <button class="btn-icon" (click)="showMembers.set(!showMembers())" title="Members">
               👥
             </button>
@@ -117,6 +124,49 @@ import { formatDistanceToNow } from 'date-fns';
           }
         </div>
 
+        <!-- Now Playing Notch -->
+        @if (room.currentMoodsic) {
+          <div class="now-playing-notch">
+            <div class="now-playing-info">
+              <span class="music-icon">🎵</span>
+              <div class="track-title-container">
+                <span class="track-title" [class.scrolling]="room.currentMoodsic.name.length > 25">
+                  {{ room.currentMoodsic.name }}
+                </span>
+              </div>
+            </div>
+            <div class="player-controls">
+              <button class="btn-player" (click)="togglePlayPause()" [title]="isPlaying() ? 'Pause' : 'Play'">
+                {{ isPlaying() ? '⏸️' : '▶️' }}
+              </button>
+              <input
+                type="range"
+                class="volume-slider"
+                min="0"
+                max="1"
+                step="0.1"
+                [value]="volume()"
+                (input)="onVolumeChange($event)"
+                title="Volume"
+              />
+              <button class="btn-player" (click)="toggleMute()" [title]="isMuted() ? 'Unmute' : 'Mute'">
+                {{ isMuted() ? '🔇' : '🔊' }}
+              </button>
+              @if (userRole() === 'OWNER') {
+                <button class="btn-player btn-stop" (click)="clearMoodsic()" title="Stop Music">
+                  🛑
+                </button>
+              }
+            </div>
+            <audio
+              #audioPlayer
+              [src]="getStreamUrl(room.currentMoodsic.id)"
+              loop
+              (ended)="onAudioEnded()"
+            ></audio>
+          </div>
+        }
+
         <!-- Input Area -->
         <div class="chat-input" [class.disabled]="isDisconnected()">
           <input
@@ -141,6 +191,14 @@ import { formatDistanceToNow } from 'date-fns';
         }
       }
     </div>
+
+    <!-- Moodsic Modal -->
+    @if (showMoodsicModal()) {
+      <app-moodsic-modal
+        (close)="showMoodsicModal.set(false)"
+        (moodsicSelected)="onMoodsicSelected($event)"
+      />
+    }
   `,
   styles: [`
     .chat-window {
@@ -207,6 +265,17 @@ import { formatDistanceToNow } from 'date-fns';
       background: rgba(0, 212, 255, 0.1);
       border-color: rgba(0, 212, 255, 0.5);
       box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-icon.btn-moodsic {
+      color: var(--neon-green, #00ff88);
+      border-color: rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-icon.btn-moodsic:hover {
+      background: rgba(0, 255, 136, 0.15);
+      border-color: rgba(0, 255, 136, 0.5);
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
     }
 
     .btn-expand {
@@ -533,6 +602,126 @@ import { formatDistanceToNow } from 'date-fns';
     .btn-danger:hover {
       background: rgba(255, 68, 68, 0.2);
     }
+
+    /* Now Playing Notch */
+    .now-playing-notch {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(15, 15, 25, 0.95);
+      border-top: 1px solid rgba(0, 255, 136, 0.2);
+      border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+      gap: 12px;
+    }
+
+    .now-playing-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .music-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .track-title-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .track-title {
+      display: inline-block;
+      color: var(--neon-green, #00ff88);
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .track-title.scrolling {
+      animation: scrollText 12s linear infinite;
+    }
+
+    @keyframes scrollText {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .player-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn-player {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-player:hover {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-player.btn-stop {
+      color: #ff4444;
+      border-color: rgba(255, 68, 68, 0.3);
+    }
+
+    .btn-player.btn-stop:hover {
+      background: rgba(255, 68, 68, 0.15);
+      border-color: rgba(255, 68, 68, 0.5);
+    }
+
+    .volume-slider {
+      width: 60px;
+      height: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px;
+      height: 12px;
+      background: var(--neon-green, #00ff88);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      background: var(--neon-green, #00ff88);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
   `]
 })
 export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterViewChecked {
@@ -540,8 +729,10 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
   private chatService = inject(ChatService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+  private moodsicService = inject(MoodsicService);
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
+  @ViewChild('audioPlayer') audioPlayer!: ElementRef<HTMLAudioElement>;
 
   @Input() room!: Room;
   @Input() collapsed = false;
@@ -555,6 +746,10 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
   messages = signal<ChatMessage[]>([]);
   showMembers = signal(false);
   isDisconnected = signal(false);
+  showMoodsicModal = signal(false);
+  isPlaying = signal(false);
+  volume = signal(0.7);
+  isMuted = signal(false);
   messageInput = '';
 
   userRole = this.roomService.role;
@@ -634,6 +829,19 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
       // Trigger debounced refresh when someone joins, leaves, gets kicked, or gets banned
       if (message.type === 'JOIN' || message.type === 'LEAVE' || message.type === 'KICK' || message.type === 'BAN') {
         this.refreshMembersSubject.next();
+      }
+
+      // Handle moodsic changes from WebSocket - refresh room to get updated moodsic
+      if (message.type === 'MOODSIC_CHANGE') {
+        this.roomService.getRoom(this.room.joinCode).subscribe(updatedRoom => {
+          this.room = updatedRoom;
+          // Auto-play for all clients when moodsic changes
+          if (updatedRoom.currentMoodsic) {
+            setTimeout(() => this.playAudio(), 100);
+          } else {
+            this.isPlaying.set(false);
+          }
+        });
       }
 
       this.messages.update(msgs => [...msgs, message]);
@@ -736,5 +944,94 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
         this.closeChat.emit();
       });
     }
+  }
+
+  // Moodsic player methods
+  getStreamUrl(id: number): string {
+    return this.moodsicService.getStreamUrl(id);
+  }
+
+  onMoodsicSelected(moodsic: Moodsic): void {
+    this.roomService.setMoodsic(this.room.joinCode, { moodsicId: moodsic.id }).subscribe({
+      next: (updatedRoom) => {
+        this.room = updatedRoom;
+        this.toastService.success('Success', 'Moodsic set successfully!');
+        // Auto-play when new moodsic is selected
+        setTimeout(() => this.playAudio(), 100);
+      },
+      error: () => {
+        this.toastService.error('Error', 'Failed to set moodsic');
+      }
+    });
+  }
+
+  togglePlayPause(): void {
+    const audio = this.audioPlayer?.nativeElement;
+    if (!audio) return;
+
+    if (audio.paused) {
+      this.playAudio();
+    } else {
+      audio.pause();
+      this.isPlaying.set(false);
+    }
+  }
+
+  private playAudio(): void {
+    const audio = this.audioPlayer?.nativeElement;
+    if (!audio) return;
+
+    audio.volume = this.isMuted() ? 0 : this.volume();
+    audio.play().then(() => {
+      this.isPlaying.set(true);
+    }).catch(err => {
+      console.warn('Audio playback failed:', err);
+    });
+  }
+
+  onVolumeChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const newVolume = parseFloat(target.value);
+    this.volume.set(newVolume);
+
+    if (newVolume > 0) {
+      this.isMuted.set(false);
+    }
+
+    const audio = this.audioPlayer?.nativeElement;
+    if (audio) {
+      audio.volume = newVolume;
+    }
+  }
+
+  toggleMute(): void {
+    const audio = this.audioPlayer?.nativeElement;
+    if (!audio) return;
+
+    if (this.isMuted()) {
+      this.isMuted.set(false);
+      audio.volume = this.volume();
+    } else {
+      this.isMuted.set(true);
+      audio.volume = 0;
+    }
+  }
+
+  clearMoodsic(): void {
+    this.roomService.clearMoodsic(this.room.joinCode).subscribe({
+      next: (updatedRoom) => {
+        this.room = updatedRoom;
+        this.isPlaying.set(false);
+        this.toastService.success('Success', 'Moodsic cleared');
+      },
+      error: () => {
+        this.toastService.error('Error', 'Failed to clear moodsic');
+      }
+    });
+  }
+
+  onAudioEnded(): void {
+    // Audio loops, so this shouldn't be called, but just in case
+    this.isPlaying.set(false);
   }
 }

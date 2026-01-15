@@ -127,4 +127,28 @@ public class ChatWebSocketController {
         );
         messagingTemplate.convertAndSend("/topic/room/" + joinCode, message);
     }
+
+    /**
+     * Broadcast moodsic change event.
+     */
+    public void broadcastMoodsicChange(String joinCode, String moodsicName) {
+        ChatMessageDto message = ChatMessageDto.systemMessage(
+                "Now playing: " + moodsicName,
+                MessageType.MOODSIC_CHANGE,
+                joinCode
+        );
+        messagingTemplate.convertAndSend("/topic/room/" + joinCode, message);
+    }
+
+    /**
+     * Broadcast moodsic clear event.
+     */
+    public void broadcastMoodsicClear(String joinCode) {
+        ChatMessageDto message = ChatMessageDto.systemMessage(
+                "Music has been stopped",
+                MessageType.MOODSIC_CHANGE,
+                joinCode
+        );
+        messagingTemplate.convertAndSend("/topic/room/" + joinCode, message);
+    }
 }

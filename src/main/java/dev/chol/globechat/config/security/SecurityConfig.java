@@ -38,6 +38,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/moodsics/*/stream").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/", "/index.html", "/favicon.ico", "/*.js", "/*.css", "/*.map").permitAll()

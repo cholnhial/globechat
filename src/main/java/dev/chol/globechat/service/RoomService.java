@@ -297,6 +297,9 @@ public class RoomService {
         // Increment play count
         moodsicRepository.incrementPlayCount(moodsic.getId());
 
+        // Broadcast moodsic change to room
+        webSocketController.broadcastMoodsicChange(joinCode, moodsic.getName());
+
         long memberCount = memberRepository.countByChatRoom(room);
         return RoomDto.from(room, memberCount);
     }
@@ -313,6 +316,9 @@ public class RoomService {
 
         room.setCurrentMoodsic(null);
         room = roomRepository.save(room);
+
+        // Broadcast moodsic clear to room
+        webSocketController.broadcastMoodsicClear(joinCode);
 
         long memberCount = memberRepository.countByChatRoom(room);
         return RoomDto.from(room, memberCount);

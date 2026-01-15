@@ -1,7 +1,12 @@
 import { Injectable, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { HttpClient, HttpEvent, HttpEventType, HttpRequest } from '@angular/common/http';
+import { Observable, tap, map, filter } from 'rxjs';
 import { Moodsic } from '../models';
+
+export interface UploadProgress {
+  progress: number;
+  moodsic?: Moodsic;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -64,5 +69,46 @@ export class MoodsicService {
         this.availableMoodsics.update((list) => list.filter((m) => m.id !== id));
       })
     );
+  }
+
+  search(query: string, filter: 'all' | 'mine' = 'all'): Observable<Moodsic[]> {
+    return this.http.get<Moodsic[]>('/api/moodsics/search', {
+      params: { query, filter }
+    });
+  }
+
+  uploadWithProgress(file: File, name: string, isPublic: boolean): Observable<UploadProgress> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('name', name);
+    formData.append('isPublic', String(isPublic));
+
+    const req = new HttpRequest('POST', '/api/moodsics', formData, {
+      reportProgress: true
+    });
+
+    return this.http.request<Moodsic>(req).pipe(
+      filter((event): event is HttpEvent<Moodsic> =>
+        event.type === HttpEventType.UploadProgress || event.type === HttpEventType.Response
+      ),
+      map((event) => {
+        if (event.type === HttpEventType.UploadProgress) {
+          const progress = event.total ? Math.round(100 * event.loaded / event.total) : 0;
+          return { progress };
+        } else if (event.type === HttpEventType.Response) {
+          const moodsic = event.body!;
+          this.myMoodsics.update((list) => [...list, moodsic]);
+          if (isPublic) {
+            this.availableMoodsics.update((list) => [...list, moodsic]);
+          }
+          return { progress: 100, moodsic };
+        }
+        return { progress: 0 };
+      })
+    );
+  }
+
+  getStreamUrl(id: number): string {
+    return `/api/moodsics/${id}/stream`;
   }
 }

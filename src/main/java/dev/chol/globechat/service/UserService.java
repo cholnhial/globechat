@@ -31,6 +31,22 @@ public class UserService {
     }
 
     /**
+     * Get the currently authenticated user, or null if not authenticated.
+     */
+    @Transactional(readOnly = true)
+    public User getCurrentUserOrNull() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (!(principal instanceof UserPrincipal userPrincipal)) {
+            return null;
+        }
+        return userRepository.findById(userPrincipal.getId()).orElse(null);
+    }
+
+    /**
      * Get user DTO for the currently authenticated user.
      */
     @Transactional(readOnly = true)

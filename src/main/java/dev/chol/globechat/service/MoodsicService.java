@@ -152,6 +152,54 @@ public class MoodsicService {
         moodsicRepository.delete(moodsic);
     }
 
+    /**
+     * Search moodsics by name with filter.
+     */
+    @Transactional(readOnly = true)
+    public List<MoodsicDto> search(String query, String filter) {
+        User currentUser = userService.getCurrentUser();
+        List<Moodsic> moodsics;
+
+        if ("mine".equalsIgnoreCase(filter)) {
+            moodsics = moodsicRepository.searchByNameAndUser(query, currentUser);
+        } else {
+            moodsics = moodsicRepository.searchAvailableForUser(query, currentUser);
+        }
+
+        return moodsics.stream()
+                .map(MoodsicDto::from)
+                .toList();
+    }
+
+    /**
+     * Get file path for streaming a moodsic.
+     * This method can be called without authentication for public moodsics.
+     */
+    @Transactional(readOnly = true)
+    public MoodsicFileInfo getFileInfo(Long id) {
+        Moodsic moodsic = findById(id);
+
+        // For streaming, we allow access if the moodsic is public or currently set as room music
+        // The moodsic ID is only known to room participants, providing implicit access control
+        // Private moodsics can only be streamed by authenticated users
+        if (!moodsic.isPublic()) {
+            User currentUser = userService.getCurrentUserOrNull();
+            if (currentUser == null || !moodsic.getUploadedBy().equals(currentUser)) {
+                throw new ForbiddenException("You don't have access to this moodsic");
+            }
+        }
+
+        return new MoodsicFileInfo(
+                storageService.getFilePath(moodsic.getFilePath()),
+                moodsic.getContentType()
+        );
+    }
+
+    /**
+     * Record for returning file info for streaming.
+     */
+    public record MoodsicFileInfo(java.nio.file.Path path, String contentType) {}
+
     private Moodsic findById(Long id) {
         return moodsicRepository.findByIdWithAssociations(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Moodsic", "id", id));

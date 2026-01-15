@@ -75,6 +75,20 @@ public interface MoodsicRepository extends JpaRepository<Moodsic, Long> {
     List<Moodsic> findAvailableForUser(@Param("user") User user);
 
     /**
+     * Search moodsics available for user (public or owned) by name.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
+     */
+    @Query("SELECT m FROM Moodsic m JOIN FETCH m.uploadedBy WHERE (m.isPublic = true OR m.uploadedBy = :user) AND LOWER(m.name) LIKE LOWER(CONCAT('%', :query, '%')) ORDER BY m.playCount DESC")
+    List<Moodsic> searchAvailableForUser(@Param("query") String query, @Param("user") User user);
+
+    /**
+     * Search user's own moodsics by name.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
+     */
+    @Query("SELECT m FROM Moodsic m JOIN FETCH m.uploadedBy WHERE m.uploadedBy = :user AND LOWER(m.name) LIKE LOWER(CONCAT('%', :query, '%')) ORDER BY m.playCount DESC")
+    List<Moodsic> searchByNameAndUser(@Param("query") String query, @Param("user") User user);
+
+    /**
      * Find a moodsic by ID with associations fetched.
      * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
