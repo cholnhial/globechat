@@ -283,7 +283,7 @@ public class RoomService {
 
         verifyOwner(room, currentUser);
 
-        Moodsic moodsic = moodsicRepository.findById(request.moodsicId())
+        Moodsic moodsic = moodsicRepository.findByIdWithAssociations(request.moodsicId())
                 .orElseThrow(() -> new ResourceNotFoundException("Moodsic", "id", request.moodsicId()));
 
         // Verify moodsic is accessible (public or owned by user)

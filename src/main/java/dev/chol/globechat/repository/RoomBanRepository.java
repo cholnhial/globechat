@@ -4,6 +4,8 @@ import dev.chol.globechat.entity.ChatRoom;
 import dev.chol.globechat.entity.RoomBan;
 import dev.chol.globechat.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -11,14 +13,21 @@ import java.util.Optional;
 
 /**
  * Repository for RoomBan entities.
+ * Queries use JOIN FETCH for lazy associations to support GraalVM native image.
  */
 @Repository
 public interface RoomBanRepository extends JpaRepository<RoomBan, Long> {
 
     /**
      * Find a ban record for a specific user in a specific room.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    Optional<RoomBan> findByChatRoomAndBannedUser(ChatRoom chatRoom, User bannedUser);
+    @Query("SELECT b FROM RoomBan b " +
+           "JOIN FETCH b.chatRoom " +
+           "JOIN FETCH b.bannedUser " +
+           "JOIN FETCH b.bannedBy " +
+           "WHERE b.chatRoom = :chatRoom AND b.bannedUser = :bannedUser")
+    Optional<RoomBan> findByChatRoomAndBannedUser(@Param("chatRoom") ChatRoom chatRoom, @Param("bannedUser") User bannedUser);
 
     /**
      * Check if a user is banned from a room.
@@ -27,18 +36,36 @@ public interface RoomBanRepository extends JpaRepository<RoomBan, Long> {
 
     /**
      * Find all bans in a specific room.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    List<RoomBan> findByChatRoom(ChatRoom chatRoom);
+    @Query("SELECT b FROM RoomBan b " +
+           "JOIN FETCH b.chatRoom " +
+           "JOIN FETCH b.bannedUser " +
+           "JOIN FETCH b.bannedBy " +
+           "WHERE b.chatRoom = :chatRoom")
+    List<RoomBan> findByChatRoom(@Param("chatRoom") ChatRoom chatRoom);
 
     /**
      * Find all bans against a specific user (across all rooms).
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    List<RoomBan> findByBannedUser(User bannedUser);
+    @Query("SELECT b FROM RoomBan b " +
+           "JOIN FETCH b.chatRoom " +
+           "JOIN FETCH b.bannedUser " +
+           "JOIN FETCH b.bannedBy " +
+           "WHERE b.bannedUser = :bannedUser")
+    List<RoomBan> findByBannedUser(@Param("bannedUser") User bannedUser);
 
     /**
      * Find all bans issued by a specific user.
+     * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
-    List<RoomBan> findByBannedBy(User bannedBy);
+    @Query("SELECT b FROM RoomBan b " +
+           "JOIN FETCH b.chatRoom " +
+           "JOIN FETCH b.bannedUser " +
+           "JOIN FETCH b.bannedBy " +
+           "WHERE b.bannedBy = :bannedBy")
+    List<RoomBan> findByBannedBy(@Param("bannedBy") User bannedBy);
 
     /**
      * Delete a ban (unban a user from a room).

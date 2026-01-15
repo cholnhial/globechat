@@ -153,7 +153,7 @@ public class MoodsicService {
     }
 
     private Moodsic findById(Long id) {
-        return moodsicRepository.findById(id)
+        return moodsicRepository.findByIdWithAssociations(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Moodsic", "id", id));
     }
 }

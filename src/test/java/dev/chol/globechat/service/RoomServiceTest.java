@@ -237,7 +237,7 @@ class RoomServiceTest {
 
         when(userService.getCurrentUser()).thenReturn(owner);
         when(roomRepository.findByJoinCode("TESTCODE")).thenReturn(Optional.of(room));
-        when(moodsicRepository.findById(1L)).thenReturn(Optional.of(moodsic));
+        when(moodsicRepository.findByIdWithAssociations(1L)).thenReturn(Optional.of(moodsic));
         when(roomRepository.save(any(ChatRoom.class))).thenReturn(room);
         when(memberRepository.countByChatRoom(room)).thenReturn(1L);
 
@@ -255,7 +255,7 @@ class RoomServiceTest {
 
         when(userService.getCurrentUser()).thenReturn(owner);
         when(roomRepository.findByJoinCode("TESTCODE")).thenReturn(Optional.of(room));
-        when(moodsicRepository.findById(1L)).thenReturn(Optional.of(privateMoodsic));
+        when(moodsicRepository.findByIdWithAssociations(1L)).thenReturn(Optional.of(privateMoodsic));
 
         assertThatThrownBy(() -> roomService.setMoodsic("TESTCODE", request))
                 .isInstanceOf(ForbiddenException.class)

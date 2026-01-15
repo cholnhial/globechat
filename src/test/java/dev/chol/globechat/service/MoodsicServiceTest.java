@@ -101,7 +101,7 @@ class MoodsicServiceTest {
     @Test
     void getById_publicMoodsic_returnsForAnyUser() {
         when(userService.getCurrentUser()).thenReturn(otherUser);
-        when(moodsicRepository.findById(1L)).thenReturn(Optional.of(publicMoodsic));
+        when(moodsicRepository.findByIdWithAssociations(1L)).thenReturn(Optional.of(publicMoodsic));
 
         MoodsicDto result = moodsicService.getById(1L);
 
@@ -111,7 +111,7 @@ class MoodsicServiceTest {
     @Test
     void getById_privateMoodsic_returnsForOwner() {
         when(userService.getCurrentUser()).thenReturn(uploader);
-        when(moodsicRepository.findById(2L)).thenReturn(Optional.of(privateMoodsic));
+        when(moodsicRepository.findByIdWithAssociations(2L)).thenReturn(Optional.of(privateMoodsic));
 
         MoodsicDto result = moodsicService.getById(2L);
 
@@ -121,7 +121,7 @@ class MoodsicServiceTest {
     @Test
     void getById_privateMoodsic_throwsForNonOwner() {
         when(userService.getCurrentUser()).thenReturn(otherUser);
-        when(moodsicRepository.findById(2L)).thenReturn(Optional.of(privateMoodsic));
+        when(moodsicRepository.findByIdWithAssociations(2L)).thenReturn(Optional.of(privateMoodsic));
 
         assertThatThrownBy(() -> moodsicService.getById(2L))
                 .isInstanceOf(ForbiddenException.class)
@@ -131,7 +131,7 @@ class MoodsicServiceTest {
     @Test
     void getById_whenNotExists_throwsException() {
         when(userService.getCurrentUser()).thenReturn(uploader);
-        when(moodsicRepository.findById(99L)).thenReturn(Optional.empty());
+        when(moodsicRepository.findByIdWithAssociations(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> moodsicService.getById(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -162,7 +162,7 @@ class MoodsicServiceTest {
     @Test
     void toggleVisibility_byOwner_togglesVisibility() {
         when(userService.getCurrentUser()).thenReturn(uploader);
-        when(moodsicRepository.findById(1L)).thenReturn(Optional.of(publicMoodsic));
+        when(moodsicRepository.findByIdWithAssociations(1L)).thenReturn(Optional.of(publicMoodsic));
         when(moodsicRepository.save(any(Moodsic.class))).thenAnswer(inv -> inv.getArgument(0));
 
         MoodsicDto result = moodsicService.toggleVisibility(1L);
@@ -173,7 +173,7 @@ class MoodsicServiceTest {
     @Test
     void toggleVisibility_byNonOwner_throwsException() {
         when(userService.getCurrentUser()).thenReturn(otherUser);
-        when(moodsicRepository.findById(1L)).thenReturn(Optional.of(publicMoodsic));
+        when(moodsicRepository.findByIdWithAssociations(1L)).thenReturn(Optional.of(publicMoodsic));
 
         assertThatThrownBy(() -> moodsicService.toggleVisibility(1L))
                 .isInstanceOf(ForbiddenException.class)
@@ -183,7 +183,7 @@ class MoodsicServiceTest {
     @Test
     void delete_byOwner_deletesMoodsic() throws IOException {
         when(userService.getCurrentUser()).thenReturn(uploader);
-        when(moodsicRepository.findById(1L)).thenReturn(Optional.of(publicMoodsic));
+        when(moodsicRepository.findByIdWithAssociations(1L)).thenReturn(Optional.of(publicMoodsic));
 
         moodsicService.delete(1L);
 
@@ -194,7 +194,7 @@ class MoodsicServiceTest {
     @Test
     void delete_byNonOwner_throwsException() {
         when(userService.getCurrentUser()).thenReturn(otherUser);
-        when(moodsicRepository.findById(1L)).thenReturn(Optional.of(publicMoodsic));
+        when(moodsicRepository.findByIdWithAssociations(1L)).thenReturn(Optional.of(publicMoodsic));
 
         assertThatThrownBy(() -> moodsicService.delete(1L))
                 .isInstanceOf(ForbiddenException.class)
