@@ -86,6 +86,7 @@ import { formatDistanceToNow } from 'date-fns';
     }
 
     .info-card {
+      position: relative;
       background: rgba(10, 25, 47, 0.98);
       border: 1px solid rgba(0, 255, 136, 0.3);
       border-radius: 20px;
