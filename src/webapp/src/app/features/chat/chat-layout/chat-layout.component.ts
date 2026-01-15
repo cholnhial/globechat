@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RoomListComponent } from '../room-list/room-list.component';
@@ -22,6 +22,7 @@ import { Room, RoomMarker } from '../../../core/models';
           (roomSelected)="onRoomSelected($event)"
           (leaveRoom)="onLeaveRoom($event)"
           (joinByCode)="onJoinByCode($event)"
+          (locateRoom)="onLocateRoom($event)"
           (logout)="onLogout()"
         />
       </aside>
@@ -131,6 +132,7 @@ import { Room, RoomMarker } from '../../../core/models';
             (closeChat)="closeChat()"
             (kicked)="onKicked($event)"
             (memberCountChanged)="onMemberCountChanged($event)"
+            (locateRoom)="onLocateRoom($event)"
           />
         </aside>
       }
@@ -411,6 +413,8 @@ import { Room, RoomMarker } from '../../../core/models';
   `]
 })
 export class ChatLayoutComponent implements OnInit, OnDestroy {
+  @ViewChild(GlobeComponent) globeComponent!: GlobeComponent;
+
   roomService = inject(RoomService);
   private chatService = inject(ChatService);
   private authService = inject(AuthService);
@@ -578,6 +582,10 @@ export class ChatLayoutComponent implements OnInit, OnDestroy {
 
   onMemberCountChanged(event: { joinCode: string; delta: number }): void {
     this.roomService.updateRoomMemberCount(event.joinCode, event.delta);
+  }
+
+  onLocateRoom(joinCode: string): void {
+    this.globeComponent?.focusOnRoom(joinCode);
   }
 
   onLogout(): void {

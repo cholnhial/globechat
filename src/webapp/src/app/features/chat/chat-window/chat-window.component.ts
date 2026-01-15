@@ -41,6 +41,9 @@ import { formatDistanceToNow } from 'date-fns';
             <button class="btn-icon" (click)="showMembers.set(!showMembers())" title="Members">
               👥
             </button>
+            <button class="btn-icon btn-locate" (click)="locateRoom.emit(room.joinCode)" title="Show on map">
+              🎯
+            </button>
             <button class="btn-icon" (click)="toggleCollapse.emit()" title="Collapse">
               ➡️
             </button>
@@ -193,6 +196,17 @@ import { formatDistanceToNow } from 'date-fns';
     .btn-icon:hover {
       background: rgba(0, 255, 136, 0.1);
       border-color: rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-icon.btn-locate {
+      color: #00d4ff;
+      border-color: rgba(0, 212, 255, 0.3);
+    }
+
+    .btn-icon.btn-locate:hover {
+      background: rgba(0, 212, 255, 0.1);
+      border-color: rgba(0, 212, 255, 0.5);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
     }
 
     .btn-expand {
@@ -536,6 +550,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
   @Output() closeChat = new EventEmitter<void>();
   @Output() kicked = new EventEmitter<{ joinCode: string; type: 'KICK' | 'BAN' }>();
   @Output() memberCountChanged = new EventEmitter<{ joinCode: string; delta: number }>();
+  @Output() locateRoom = new EventEmitter<string>();
 
   messages = signal<ChatMessage[]>([]);
   showMembers = signal(false);

@@ -162,6 +162,29 @@ import { RoomMarker } from '../../../core/models';
         inset 0 0 15px rgba(0, 212, 255, 0.3);
       transform: scale(1.2);
     }
+
+    :host ::ng-deep .marker-container.flashing {
+      animation: markerFlash 0.33s ease-in-out 9;
+    }
+
+    @keyframes markerFlash {
+      0%, 100% {
+        border-color: #00ff88;
+        box-shadow:
+          0 0 15px rgba(0, 255, 136, 0.6),
+          0 0 30px rgba(0, 255, 136, 0.3),
+          inset 0 0 10px rgba(0, 255, 136, 0.2);
+        transform: scale(1);
+      }
+      50% {
+        border-color: #00d4ff;
+        box-shadow:
+          0 0 25px rgba(0, 212, 255, 1),
+          0 0 50px rgba(0, 212, 255, 0.6),
+          inset 0 0 20px rgba(0, 212, 255, 0.4);
+        transform: scale(1.3);
+      }
+    }
   `]
 })
 export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
@@ -318,5 +341,32 @@ export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
 
   onRefresh(): void {
     this.refreshRooms.emit();
+  }
+
+  focusOnRoom(joinCode: string): void {
+    const roomMarker = this.markers.find(m => m.joinCode === joinCode);
+    if (!roomMarker) return;
+
+    // Fly to the marker location
+    this.map.flyTo({
+      center: [roomMarker.longitude, roomMarker.latitude],
+      zoom: 10,
+      duration: 1000,
+    });
+
+    // Flash the marker after flying completes
+    setTimeout(() => {
+      const marker = this.mapMarkers.get(joinCode);
+      if (marker) {
+        const container = marker.getElement().querySelector('.marker-container');
+        if (container) {
+          container.classList.add('flashing');
+          // Remove flashing class after animation completes (9 iterations * 0.33s = ~3s)
+          setTimeout(() => {
+            container.classList.remove('flashing');
+          }, 3000);
+        }
+      }
+    }, 1000);
   }
 }

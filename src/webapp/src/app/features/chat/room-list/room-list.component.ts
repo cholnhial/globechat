@@ -86,13 +86,22 @@ type RoomFilter = 'all' | 'owned';
                   <span class="join-code">{{ room.joinCode }}</span>
                 </div>
               </div>
-              <button
-                class="btn-leave"
-                (click)="onLeaveRoom($event, room.joinCode)"
-                title="Leave room"
-              >
-                ×
-              </button>
+              <div class="room-actions">
+                <button
+                  class="btn-locate"
+                  (click)="onLocateRoom($event, room.joinCode)"
+                  title="Show on map"
+                >
+                  🎯
+                </button>
+                <button
+                  class="btn-leave"
+                  (click)="onLeaveRoom($event, room.joinCode)"
+                  title="Leave room"
+                >
+                  ×
+                </button>
+              </div>
             </div>
           }
         }
@@ -343,6 +352,37 @@ type RoomFilter = 'all' | 'owned';
       font-family: monospace;
     }
 
+    .room-actions {
+      display: flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .room-item:hover .room-actions {
+      opacity: 1;
+    }
+
+    .btn-locate {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      color: #00d4ff;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-locate:hover {
+      background: rgba(0, 212, 255, 0.2);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.4);
+    }
+
     .btn-leave {
       width: 28px;
       height: 28px;
@@ -352,16 +392,12 @@ type RoomFilter = 'all' | 'owned';
       color: #ff4444;
       font-size: 18px;
       cursor: pointer;
-      opacity: 0;
       transition: all 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    .room-item:hover .btn-leave {
-      opacity: 1;
-    }
 
     .btn-leave:hover {
       background: rgba(255, 68, 68, 0.2);
@@ -377,6 +413,7 @@ export class RoomListComponent {
   @Output() roomSelected = new EventEmitter<Room>();
   @Output() leaveRoom = new EventEmitter<string>();
   @Output() joinByCode = new EventEmitter<string>();
+  @Output() locateRoom = new EventEmitter<string>();
   @Output() logout = new EventEmitter<void>();
 
   joinCode = '';
@@ -400,5 +437,10 @@ export class RoomListComponent {
   onLeaveRoom(event: Event, joinCode: string): void {
     event.stopPropagation();
     this.leaveRoom.emit(joinCode);
+  }
+
+  onLocateRoom(event: Event, joinCode: string): void {
+    event.stopPropagation();
+    this.locateRoom.emit(joinCode);
   }
 }
