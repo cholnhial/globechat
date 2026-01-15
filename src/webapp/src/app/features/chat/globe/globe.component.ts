@@ -20,6 +20,14 @@ import { RoomMarker } from '../../../core/models';
     <div class="globe-container">
       <div #mapContainer class="map" [class.create-mode]="createMode"></div>
       <div class="map-controls">
+        <button (click)="onRefresh()" title="Refresh rooms" class="refresh-btn">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 21h5v-5"/>
+          </svg>
+        </button>
         <button (click)="zoomIn()" title="Zoom in">+</button>
         <button (click)="zoomOut()" title="Zoom out">−</button>
         <button (click)="resetView()" title="Reset view">🌐</button>
@@ -165,6 +173,7 @@ export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
 
   @Output() markerClicked = new EventEmitter<RoomMarker>();
   @Output() mapClicked = new EventEmitter<{ lat: number; lng: number }>();
+  @Output() refreshRooms = new EventEmitter<void>();
 
   private map!: Map;
   private mapMarkers = new window.Map<string, Marker>();
@@ -305,5 +314,9 @@ export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
       zoom: 2,
       duration: 1500,
     });
+  }
+
+  onRefresh(): void {
+    this.refreshRooms.emit();
   }
 }

@@ -53,6 +53,7 @@ import { Room, RoomMarker } from '../../../core/models';
           [createMode]="createMode()"
           (markerClicked)="onMarkerClicked($event)"
           (mapClicked)="onMapClicked($event)"
+          (refreshRooms)="onRefreshRooms()"
         />
 
         <!-- Room Info Card Popup -->
@@ -490,6 +491,10 @@ export class ChatLayoutComponent implements OnInit, OnDestroy {
     }
     this.selectedMarker.set(marker);
     this.showInfoCard.set(true);
+  }
+
+  onRefreshRooms(): void {
+    this.roomService.loadRoomMarkers().subscribe();
   }
 
   onMapClicked(coords: { lat: number; lng: number }): void {
