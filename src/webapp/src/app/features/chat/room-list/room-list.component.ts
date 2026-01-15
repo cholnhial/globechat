@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { Room } from '../../../core/models';
 import { AuthService } from '../../../core/services';
 
+type RoomFilter = 'all' | 'owned';
+
 @Component({
   selector: 'app-room-list',
   standalone: true,
@@ -42,16 +44,35 @@ import { AuthService } from '../../../core/services';
       </div>
 
       <!-- Room List -->
-      <div class="section-title">My Rooms</div>
+      <div class="section-header">
+        <span class="section-title">My Rooms</span>
+        <div class="filter-toggle">
+          <button
+            class="filter-btn"
+            [class.active]="filter() === 'all'"
+            (click)="filter.set('all')"
+          >All</button>
+          <button
+            class="filter-btn"
+            [class.active]="filter() === 'owned'"
+            (click)="filter.set('owned')"
+          >Owned</button>
+        </div>
+      </div>
       <div class="rooms-container">
-        @if (rooms.length === 0) {
+        @if (filteredRooms.length === 0) {
           <div class="empty-state">
             <span>🔍</span>
-            <p>No rooms yet</p>
-            <small>Click on the globe to create or join a room</small>
+            @if (filter() === 'owned') {
+              <p>No owned rooms</p>
+              <small>Create a room to see it here</small>
+            } @else {
+              <p>No rooms yet</p>
+              <small>Click on the globe to create or join a room</small>
+            }
           </div>
         } @else {
-          @for (room of rooms; track room.joinCode) {
+          @for (room of filteredRooms; track room.joinCode) {
             <div
               class="room-item"
               [class.active]="activeRoomCode === room.joinCode"
@@ -199,12 +220,47 @@ import { AuthService } from '../../../core/services';
       cursor: not-allowed;
     }
 
-    .section-title {
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 16px 20px 8px;
+    }
+
+    .section-title {
       color: rgba(255, 255, 255, 0.5);
       font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 1px;
+    }
+
+    .filter-toggle {
+      display: flex;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 6px;
+      padding: 2px;
+    }
+
+    .filter-btn {
+      padding: 4px 10px;
+      font-size: 11px;
+      border: none;
+      border-radius: 4px;
+      background: transparent;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn:hover {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .filter-btn.active {
+      background: var(--neon-green);
+      color: #0a0a1a;
+      font-weight: 600;
     }
 
     .rooms-container {
@@ -324,6 +380,15 @@ export class RoomListComponent {
   @Output() logout = new EventEmitter<void>();
 
   joinCode = '';
+  filter = signal<RoomFilter>('all');
+
+  get filteredRooms(): Room[] {
+    const currentUsername = this.authService.user()?.username;
+    if (this.filter() === 'owned') {
+      return this.rooms.filter(room => room.owner.username === currentUsername);
+    }
+    return this.rooms;
+  }
 
   onJoinByCode(): void {
     if (this.joinCode.trim()) {

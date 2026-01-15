@@ -53,7 +53,17 @@ export class RoomService {
   }
 
   getRoom(joinCode: string): Observable<Room> {
-    return this.http.get<Room>(`/api/rooms/${joinCode}`).pipe(tap((room) => this.activeRoom.set(room)));
+    return this.http.get<Room>(`/api/rooms/${joinCode}`).pipe(
+      tap((room) => {
+        this.activeRoom.set(room);
+        // Sync member count to myRooms
+        this.myRooms.update((rooms) =>
+          rooms.map((r) =>
+            r.joinCode === joinCode ? { ...r, memberCount: room.memberCount } : r
+          )
+        );
+      })
+    );
   }
 
   createRoom(request: CreateRoomRequest): Observable<Room> {
@@ -190,5 +200,19 @@ export class RoomService {
       this.activeRoomMembers.set([]);
       this.userRole.set(null);
     }
+  }
+
+  /**
+   * Update member count for a room locally without making an API call.
+   * Used when users join/leave the room via WebSocket messages.
+   */
+  updateRoomMemberCount(joinCode: string, delta: number): void {
+    this.myRooms.update((rooms) =>
+      rooms.map((r) =>
+        r.joinCode === joinCode
+          ? { ...r, memberCount: Math.max(0, r.memberCount + delta) }
+          : r
+      )
+    );
   }
 }

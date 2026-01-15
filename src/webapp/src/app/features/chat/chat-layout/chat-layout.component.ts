@@ -130,6 +130,7 @@ import { Room, RoomMarker } from '../../../core/models';
             (toggleCollapse)="toggleChatCollapse()"
             (closeChat)="closeChat()"
             (kicked)="onKicked($event)"
+            (memberCountChanged)="onMemberCountChanged($event)"
           />
         </aside>
       }
@@ -573,6 +574,10 @@ export class ChatLayoutComponent implements OnInit, OnDestroy {
     } else {
       this.toastService.error('Banned', `You have been banned from "${roomTitle}"`);
     }
+  }
+
+  onMemberCountChanged(event: { joinCode: string; delta: number }): void {
+    this.roomService.updateRoomMemberCount(event.joinCode, event.delta);
   }
 
   onLogout(): void {

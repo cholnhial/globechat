@@ -535,6 +535,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
   @Output() toggleCollapse = new EventEmitter<void>();
   @Output() closeChat = new EventEmitter<void>();
   @Output() kicked = new EventEmitter<{ joinCode: string; type: 'KICK' | 'BAN' }>();
+  @Output() memberCountChanged = new EventEmitter<{ joinCode: string; delta: number }>();
 
   messages = signal<ChatMessage[]>([]);
   showMembers = signal(false);
@@ -606,6 +607,13 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
       if ((message.type === 'KICK' || message.type === 'BAN') && message.targetUsername === currentUsername) {
         this.kicked.emit({ joinCode: this.room.joinCode, type: message.type });
         return; // Don't add the message since we're being removed
+      }
+
+      // Emit member count changes for the My Rooms panel
+      if (message.type === 'JOIN') {
+        this.memberCountChanged.emit({ joinCode: this.room.joinCode, delta: 1 });
+      } else if (message.type === 'LEAVE' || message.type === 'KICK' || message.type === 'BAN') {
+        this.memberCountChanged.emit({ joinCode: this.room.joinCode, delta: -1 });
       }
 
       // Trigger debounced refresh when someone joins, leaves, gets kicked, or gets banned
