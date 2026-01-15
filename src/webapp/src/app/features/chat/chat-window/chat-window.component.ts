@@ -16,7 +16,8 @@ import {
 import { FormsModule } from '@angular/forms';
 import { Room, RoomMember, ChatMessage, MemberRole } from '../../../core/models';
 import { RoomService, ChatService, AuthService, ToastService } from '../../../core/services';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 import { formatDistanceToNow } from 'date-fns';
 
 @Component({
@@ -543,15 +544,27 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
   userRole = this.roomService.role;
 
   private chatSubscription?: Subscription;
+  private refreshSubscription?: Subscription;
+  private refreshMembersSubject = new Subject<void>();
   private shouldScrollToBottom = true;
 
   ngOnInit(): void {
     this.loadMessages();
     this.subscribeToChat();
+
+    // Subscribe to debounced member refresh (500ms debounce)
+    this.refreshSubscription = this.refreshMembersSubject.pipe(
+      debounceTime(500)
+    ).subscribe(() => {
+      this.roomService.loadMembers(this.room.joinCode).subscribe();
+      this.roomService.getRoom(this.room.joinCode).subscribe();
+    });
   }
 
   ngOnDestroy(): void {
     this.chatSubscription?.unsubscribe();
+    this.refreshSubscription?.unsubscribe();
+    this.refreshMembersSubject.complete();
     if (this.room) {
       this.chatService.leaveRoom(this.room.joinCode);
     }
@@ -593,6 +606,11 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
       if ((message.type === 'KICK' || message.type === 'BAN') && message.targetUsername === currentUsername) {
         this.kicked.emit({ joinCode: this.room.joinCode, type: message.type });
         return; // Don't add the message since we're being removed
+      }
+
+      // Trigger debounced refresh when someone joins, leaves, gets kicked, or gets banned
+      if (message.type === 'JOIN' || message.type === 'LEAVE' || message.type === 'KICK' || message.type === 'BAN') {
+        this.refreshMembersSubject.next();
       }
 
       this.messages.update(msgs => [...msgs, message]);
