@@ -489,8 +489,11 @@ export class ChatLayoutComponent implements OnInit, OnDestroy {
     if (this.createMode()) {
       return; // Ignore marker clicks in create mode
     }
-    this.selectedMarker.set(marker);
-    this.showInfoCard.set(true);
+    // Fetch fresh marker data from backend to get updated member count
+    this.roomService.getRoomMarker(marker.joinCode).subscribe(freshMarker => {
+      this.selectedMarker.set(freshMarker);
+      this.showInfoCard.set(true);
+    });
   }
 
   onRefreshRooms(): void {

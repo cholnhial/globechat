@@ -139,6 +139,12 @@ public class RoomController {
         return ResponseEntity.ok(markers);
     }
 
+    @GetMapping("/markers/{joinCode}")
+    public ResponseEntity<RoomMarkerDto> getRoomMarker(@PathVariable String joinCode) {
+        RoomMarkerDto marker = roomService.getRoomMarker(joinCode);
+        return ResponseEntity.ok(marker);
+    }
+
     @GetMapping("/{joinCode}/role")
     public ResponseEntity<MemberRole> getUserRole(@PathVariable String joinCode) {
         MemberRole role = roomService.getUserRole(joinCode);

@@ -41,6 +41,17 @@ export class RoomService {
       .pipe(tap((markers) => this.roomMarkers.set(markers)));
   }
 
+  getRoomMarker(joinCode: string): Observable<RoomMarker> {
+    return this.http.get<RoomMarker>(`/api/rooms/markers/${joinCode}`).pipe(
+      tap((marker) => {
+        // Update the marker in the markers list
+        this.roomMarkers.update((markers) =>
+          markers.map((m) => (m.joinCode === joinCode ? marker : m))
+        );
+      })
+    );
+  }
+
   getRoom(joinCode: string): Observable<Room> {
     return this.http.get<Room>(`/api/rooms/${joinCode}`).pipe(tap((room) => this.activeRoom.set(room)));
   }

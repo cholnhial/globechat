@@ -342,6 +342,16 @@ public class RoomService {
     }
 
     /**
+     * Get a single room marker by join code.
+     */
+    @Transactional(readOnly = true)
+    public RoomMarkerDto getRoomMarker(String joinCode) {
+        ChatRoom room = findRoomByJoinCode(joinCode);
+        long memberCount = memberRepository.countByChatRoom(room);
+        return RoomMarkerDto.from(room, memberCount);
+    }
+
+    /**
      * Toggle moodsic pause state (owner/mod only).
      */
     @Transactional
