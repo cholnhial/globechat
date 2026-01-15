@@ -65,7 +65,12 @@ import { formatDistanceToNow } from 'date-fns';
               <div class="message" [class]="getMessageClass(message)">
                 @if (message.type === 'CHAT') {
                   <div class="message-header">
-                    <span class="sender">{{ message.sender?.username }}</span>
+                    <div class="sender-info">
+                      <span class="sender">{{ message.sender?.username }}</span>
+                      @if (getMemberRole(message.sender?.username); as role) {
+                        <span class="sender-role" [class]="role.toLowerCase()">{{ getRoleLabel(role) }}</span>
+                      }
+                    </div>
                     <span class="time">{{ formatTime(message.createdAt) }}</span>
                   </div>
                   <div class="message-content">{{ message.content }}</div>
@@ -240,13 +245,47 @@ import { formatDistanceToNow } from 'date-fns';
     .message-header {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       margin-bottom: 6px;
+    }
+
+    .sender-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .sender {
       color: var(--neon-green);
       font-weight: 600;
       font-size: 14px;
+    }
+
+    .sender-role {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .sender-role.owner {
+      background: rgba(255, 215, 0, 0.2);
+      color: #ffd700;
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+    }
+
+    .sender-role.mod {
+      background: rgba(0, 212, 255, 0.2);
+      color: #00d4ff;
+      border: 1px solid rgba(0, 212, 255, 0.4);
+      text-shadow: 0 0 8px rgba(0, 212, 255, 0.5);
+    }
+
+    .sender-role.chatter {
+      display: none; /* Hide chatter role to reduce noise */
     }
 
     .time {
@@ -604,6 +643,21 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
       SYSTEM: 'ℹ️',
     };
     return icons[type] || 'ℹ️';
+  }
+
+  getMemberRole(username: string | undefined): string | null {
+    if (!username) return null;
+    const member = this.roomService.members().find(m => m.user.username === username);
+    return member?.role || null;
+  }
+
+  getRoleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      OWNER: '👑 Owner',
+      MOD: '🛡️ Mod',
+      CHATTER: 'Member',
+    };
+    return labels[role] || role;
   }
 
   formatTime(date: string): string {
