@@ -23,7 +23,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
      */
     @Query("SELECT m FROM ChatMessage m " +
            "JOIN FETCH m.sender " +
-           "JOIN FETCH m.chatRoom " +
+           "JOIN FETCH m.chatRoom cr " +
+           "JOIN FETCH cr.owner " +
            "WHERE m.chatRoom = :chatRoom " +
            "ORDER BY m.createdAt ASC")
     List<ChatMessage> findByChatRoomOrderByCreatedAtAsc(@Param("chatRoom") ChatRoom chatRoom);
@@ -34,7 +35,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
      */
     @Query("SELECT m FROM ChatMessage m " +
            "JOIN FETCH m.sender " +
-           "JOIN FETCH m.chatRoom " +
+           "JOIN FETCH m.chatRoom cr " +
+           "JOIN FETCH cr.owner " +
            "WHERE m.chatRoom = :room " +
            "ORDER BY m.createdAt DESC")
     List<ChatMessage> findRecentMessages(@Param("room") ChatRoom room, Pageable pageable);
@@ -45,7 +47,8 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
      */
     @Query("SELECT m FROM ChatMessage m " +
            "JOIN FETCH m.sender " +
-           "JOIN FETCH m.chatRoom " +
+           "JOIN FETCH m.chatRoom cr " +
+           "JOIN FETCH cr.owner " +
            "WHERE m.chatRoom = :room " +
            "ORDER BY m.createdAt DESC")
     List<ChatMessage> findLastNMessages(@Param("room") ChatRoom room, Pageable pageable);

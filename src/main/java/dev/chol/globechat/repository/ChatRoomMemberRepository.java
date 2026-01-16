@@ -71,7 +71,8 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
      */
     @Query("SELECT DISTINCT m.chatRoom FROM ChatRoomMember m " +
            "JOIN FETCH m.chatRoom.owner " +
-           "LEFT JOIN FETCH m.chatRoom.currentMoodsic " +
+           "LEFT JOIN FETCH m.chatRoom.currentMoodsic cm " +
+           "LEFT JOIN FETCH cm.uploadedBy " +
            "WHERE m.user = :user")
     List<ChatRoom> findRoomsByUser(@Param("user") User user);
 
@@ -81,7 +82,8 @@ public interface ChatRoomMemberRepository extends JpaRepository<ChatRoomMember, 
      */
     @Query("SELECT DISTINCT m.chatRoom FROM ChatRoomMember m " +
            "JOIN FETCH m.chatRoom.owner " +
-           "LEFT JOIN FETCH m.chatRoom.currentMoodsic " +
+           "LEFT JOIN FETCH m.chatRoom.currentMoodsic cm " +
+           "LEFT JOIN FETCH cm.uploadedBy " +
            "WHERE m.user = :user AND m.role = :role")
     List<ChatRoom> findRoomsByUserAndRole(@Param("user") User user, @Param("role") MemberRole role);
 

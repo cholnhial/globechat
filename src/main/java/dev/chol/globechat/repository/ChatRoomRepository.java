@@ -23,7 +23,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
      */
     @Query("SELECT r FROM ChatRoom r " +
            "JOIN FETCH r.owner " +
-           "LEFT JOIN FETCH r.currentMoodsic " +
+           "LEFT JOIN FETCH r.currentMoodsic m " +
+           "LEFT JOIN FETCH m.uploadedBy " +
            "WHERE r.joinCode = :joinCode")
     Optional<ChatRoom> findByJoinCode(@Param("joinCode") String joinCode);
 
@@ -33,7 +34,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
      */
     @Query("SELECT DISTINCT r FROM ChatRoom r " +
            "JOIN FETCH r.owner " +
-           "LEFT JOIN FETCH r.currentMoodsic " +
+           "LEFT JOIN FETCH r.currentMoodsic m " +
+           "LEFT JOIN FETCH m.uploadedBy " +
            "WHERE r.owner = :owner")
     List<ChatRoom> findByOwner(@Param("owner") User owner);
 
@@ -48,7 +50,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
      */
     @Query("SELECT DISTINCT r FROM ChatRoom r " +
            "JOIN FETCH r.owner " +
-           "LEFT JOIN FETCH r.currentMoodsic " +
+           "LEFT JOIN FETCH r.currentMoodsic m " +
+           "LEFT JOIN FETCH m.uploadedBy " +
            "WHERE LOWER(r.title) LIKE LOWER(CONCAT('%', :query, '%'))")
     List<ChatRoom> searchByTitle(@Param("query") String query);
 
@@ -58,7 +61,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
      */
     @Query("SELECT DISTINCT r FROM ChatRoom r " +
            "JOIN FETCH r.owner " +
-           "LEFT JOIN FETCH r.currentMoodsic " +
+           "LEFT JOIN FETCH r.currentMoodsic m " +
+           "LEFT JOIN FETCH m.uploadedBy " +
            "WHERE r.currentMoodsic.id = :moodsicId")
     List<ChatRoom> findByCurrentMoodsicId(@Param("moodsicId") Long moodsicId);
 
@@ -74,7 +78,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
      */
     @Query("SELECT r FROM ChatRoom r " +
            "JOIN FETCH r.owner " +
-           "LEFT JOIN FETCH r.currentMoodsic " +
+           "LEFT JOIN FETCH r.currentMoodsic m " +
+           "LEFT JOIN FETCH m.uploadedBy " +
            "WHERE r.id = :id")
     Optional<ChatRoom> findByIdWithAssociations(@Param("id") Long id);
 
@@ -84,6 +89,7 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
      */
     @Query("SELECT DISTINCT r FROM ChatRoom r " +
            "JOIN FETCH r.owner " +
-           "LEFT JOIN FETCH r.currentMoodsic")
+           "LEFT JOIN FETCH r.currentMoodsic m " +
+           "LEFT JOIN FETCH m.uploadedBy")
     List<ChatRoom> findAllWithAssociations();
 }

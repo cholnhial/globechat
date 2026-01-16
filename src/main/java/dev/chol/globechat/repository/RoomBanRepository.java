@@ -23,7 +23,10 @@ public interface RoomBanRepository extends JpaRepository<RoomBan, Long> {
      * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
     @Query("SELECT b FROM RoomBan b " +
-           "JOIN FETCH b.chatRoom " +
+           "JOIN FETCH b.chatRoom cr " +
+           "JOIN FETCH cr.owner " +
+           "LEFT JOIN FETCH cr.currentMoodsic cm " +
+           "LEFT JOIN FETCH cm.uploadedBy " +
            "JOIN FETCH b.bannedUser " +
            "JOIN FETCH b.bannedBy " +
            "WHERE b.chatRoom = :chatRoom AND b.bannedUser = :bannedUser")
@@ -39,7 +42,10 @@ public interface RoomBanRepository extends JpaRepository<RoomBan, Long> {
      * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
     @Query("SELECT b FROM RoomBan b " +
-           "JOIN FETCH b.chatRoom " +
+           "JOIN FETCH b.chatRoom cr " +
+           "JOIN FETCH cr.owner " +
+           "LEFT JOIN FETCH cr.currentMoodsic cm " +
+           "LEFT JOIN FETCH cm.uploadedBy " +
            "JOIN FETCH b.bannedUser " +
            "JOIN FETCH b.bannedBy " +
            "WHERE b.chatRoom = :chatRoom")
@@ -50,7 +56,10 @@ public interface RoomBanRepository extends JpaRepository<RoomBan, Long> {
      * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
     @Query("SELECT b FROM RoomBan b " +
-           "JOIN FETCH b.chatRoom " +
+           "JOIN FETCH b.chatRoom cr " +
+           "JOIN FETCH cr.owner " +
+           "LEFT JOIN FETCH cr.currentMoodsic cm " +
+           "LEFT JOIN FETCH cm.uploadedBy " +
            "JOIN FETCH b.bannedUser " +
            "JOIN FETCH b.bannedBy " +
            "WHERE b.bannedUser = :bannedUser")
@@ -61,7 +70,10 @@ public interface RoomBanRepository extends JpaRepository<RoomBan, Long> {
      * Uses JOIN FETCH for lazy associations to support GraalVM native image.
      */
     @Query("SELECT b FROM RoomBan b " +
-           "JOIN FETCH b.chatRoom " +
+           "JOIN FETCH b.chatRoom cr " +
+           "JOIN FETCH cr.owner " +
+           "LEFT JOIN FETCH cr.currentMoodsic cm " +
+           "LEFT JOIN FETCH cm.uploadedBy " +
            "JOIN FETCH b.bannedUser " +
            "JOIN FETCH b.bannedBy " +
            "WHERE b.bannedBy = :bannedBy")
