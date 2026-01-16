@@ -1,7 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, inject } from '@angular/core';
 import { HttpClient, HttpEvent, HttpEventType, HttpRequest } from '@angular/common/http';
 import { Observable, tap, map, filter } from 'rxjs';
 import { Moodsic } from '../models';
+import { AuthService } from './auth.service';
 
 export interface UploadProgress {
   progress: number;
@@ -14,6 +15,7 @@ export interface UploadProgress {
 export class MoodsicService {
   private availableMoodsics = signal<Moodsic[]>([]);
   private myMoodsics = signal<Moodsic[]>([]);
+  private authService = inject(AuthService);
 
   readonly available = this.availableMoodsics.asReadonly();
   readonly mine = this.myMoodsics.asReadonly();
@@ -109,6 +111,8 @@ export class MoodsicService {
   }
 
   getStreamUrl(id: number): string {
-    return `/api/moodsics/${id}/stream`;
+    const token = this.authService.getToken();
+    const baseUrl = `/api/moodsics/${id}/stream`;
+    return token ? `${baseUrl}?token=${encodeURIComponent(token)}` : baseUrl;
   }
 }

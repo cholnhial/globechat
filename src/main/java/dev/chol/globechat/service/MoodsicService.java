@@ -1,11 +1,14 @@
 package dev.chol.globechat.service;
 
 import dev.chol.globechat.dto.MoodsicDto;
+import dev.chol.globechat.entity.ChatRoom;
 import dev.chol.globechat.entity.Moodsic;
 import dev.chol.globechat.entity.User;
 import dev.chol.globechat.exception.BadRequestException;
 import dev.chol.globechat.exception.ForbiddenException;
 import dev.chol.globechat.exception.ResourceNotFoundException;
+import dev.chol.globechat.repository.ChatRoomMemberRepository;
+import dev.chol.globechat.repository.ChatRoomRepository;
 import dev.chol.globechat.repository.MoodsicRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,8 @@ public class MoodsicService {
     private final MoodsicRepository moodsicRepository;
     private final MoodsicStorageService storageService;
     private final UserService userService;
+    private final ChatRoomRepository chatRoomRepository;
+    private final ChatRoomMemberRepository chatRoomMemberRepository;
 
     /**
      * Upload a new moodsic.
@@ -173,26 +178,49 @@ public class MoodsicService {
 
     /**
      * Get file path for streaming a moodsic.
-     * This method can be called without authentication for public moodsics.
+     * Access is allowed if:
+     * 1. The moodsic is public, OR
+     * 2. The user is the uploader, OR
+     * 3. The user is a member of a room where this moodsic is currently playing
      */
     @Transactional(readOnly = true)
     public MoodsicFileInfo getFileInfo(Long id) {
         Moodsic moodsic = findById(id);
 
-        // For streaming, we allow access if the moodsic is public or currently set as room music
-        // The moodsic ID is only known to room participants, providing implicit access control
-        // Private moodsics can only be streamed by authenticated users
-        if (!moodsic.isPublic()) {
-            User currentUser = userService.getCurrentUserOrNull();
-            if (currentUser == null || !moodsic.getUploadedBy().equals(currentUser)) {
-                throw new ForbiddenException("You don't have access to this moodsic");
+        // Public moodsics can be streamed by anyone
+        if (moodsic.isPublic()) {
+            return new MoodsicFileInfo(
+                    storageService.getFilePath(moodsic.getFilePath()),
+                    moodsic.getContentType()
+            );
+        }
+
+        // For private moodsics, check user authentication and access rights
+        User currentUser = userService.getCurrentUserOrNull();
+        if (currentUser == null) {
+            throw new ForbiddenException("You don't have access to this moodsic");
+        }
+
+        // Allow access if user is the uploader
+        if (moodsic.getUploadedBy().equals(currentUser)) {
+            return new MoodsicFileInfo(
+                    storageService.getFilePath(moodsic.getFilePath()),
+                    moodsic.getContentType()
+            );
+        }
+
+        // Allow access if user is a member of any room where this moodsic is currently playing
+        List<ChatRoom> roomsPlayingMoodsic = chatRoomRepository.findByCurrentMoodsicId(id);
+        for (ChatRoom room : roomsPlayingMoodsic) {
+            if (chatRoomMemberRepository.existsByUserAndChatRoom(currentUser, room)) {
+                return new MoodsicFileInfo(
+                        storageService.getFilePath(moodsic.getFilePath()),
+                        moodsic.getContentType()
+                );
             }
         }
 
-        return new MoodsicFileInfo(
-                storageService.getFilePath(moodsic.getFilePath()),
-                moodsic.getContentType()
-        );
+        throw new ForbiddenException("You don't have access to this moodsic");
     }
 
     /**
