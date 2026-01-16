@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RoomListComponent } from '../room-list/room-list.component';
@@ -122,7 +122,7 @@ import { Room, RoomMarker } from '../../../core/models';
         }
       </main>
 
-      <!-- Right Panel - Chat Window -->
+      <!-- Right Panel - Chat Window (Desktop) -->
       @if (activeRoom()) {
         <aside class="chat-panel" [class.collapsed]="chatCollapsed()">
           <app-chat-window
@@ -135,6 +135,64 @@ import { Room, RoomMarker } from '../../../core/models';
             (locateRoom)="onLocateRoom($event)"
           />
         </aside>
+      }
+
+      <!-- Mobile Tab Bar -->
+      <nav class="mobile-tab-bar">
+        <button
+          class="tab-btn"
+          [class.active]="showMobileRooms()"
+          (click)="toggleMobileRooms()"
+        >
+          <span class="tab-icon">🏠</span>
+          <span class="tab-label">Rooms</span>
+          @if (roomService.rooms().length > 0) {
+            <span class="tab-badge">{{ roomService.rooms().length }}</span>
+          }
+        </button>
+        <button
+          class="tab-btn"
+          [class.active]="showMobileChat()"
+          [class.disabled]="!activeRoom()"
+          (click)="toggleMobileChat()"
+          [disabled]="!activeRoom()"
+        >
+          <span class="tab-icon">💬</span>
+          <span class="tab-label">Chat</span>
+        </button>
+      </nav>
+
+      <!-- Mobile Room Sheet -->
+      @if (showMobileRooms()) {
+        <div class="mobile-backdrop" (click)="closeMobileRooms()"></div>
+        <div class="mobile-room-sheet">
+          <div class="sheet-handle"></div>
+          <app-room-list
+            [rooms]="roomService.rooms()"
+            [activeRoomCode]="activeRoom()?.joinCode || null"
+            (roomSelected)="onMobileRoomSelected($event)"
+            (leaveRoom)="onLeaveRoom($event)"
+            (joinByCode)="onMobileJoinByCode($event)"
+            (locateRoom)="onMobileLocateRoom($event)"
+            (logout)="onLogout()"
+          />
+        </div>
+      }
+
+      <!-- Mobile Chat Overlay -->
+      @if (showMobileChat() && activeRoom()) {
+        <div class="mobile-chat-overlay">
+          <app-chat-window
+            [room]="activeRoom()!"
+            [collapsed]="false"
+            [isMobile]="true"
+            (toggleCollapse)="closeMobileChat()"
+            (closeChat)="onMobileCloseChat()"
+            (kicked)="onKicked($event)"
+            (memberCountChanged)="onMemberCountChanged($event)"
+            (locateRoom)="onMobileLocateRoom($event)"
+          />
+        </div>
       }
     </div>
   `,
@@ -410,6 +468,205 @@ import { Room, RoomMarker } from '../../../core/models';
       opacity: 0.5;
       cursor: not-allowed;
     }
+
+    /* Mobile Tab Bar */
+    .mobile-tab-bar {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: rgba(10, 25, 47, 0.98);
+      border-top: 1px solid rgba(0, 255, 136, 0.2);
+      z-index: 100;
+      padding: 0 20px;
+      gap: 20px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tab-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 8px 24px;
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      border-radius: 12px;
+    }
+
+    .tab-btn:hover:not(:disabled) {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .tab-btn.active {
+      color: var(--neon-green);
+      background: rgba(0, 255, 136, 0.1);
+    }
+
+    .tab-btn.disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .tab-icon {
+      font-size: 20px;
+    }
+
+    .tab-label {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .tab-badge {
+      position: absolute;
+      top: 4px;
+      right: 16px;
+      min-width: 18px;
+      height: 18px;
+      background: var(--neon-green);
+      color: #0a0a1a;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+    }
+
+    /* Mobile Backdrop */
+    .mobile-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 60px;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 89;
+      animation: fadeIn 0.2s ease;
+    }
+
+    /* Mobile Room Sheet */
+    .mobile-room-sheet {
+      display: none;
+      position: fixed;
+      bottom: 60px;
+      left: 0;
+      right: 0;
+      height: 65vh;
+      background: rgba(10, 25, 47, 0.98);
+      border-radius: 20px 20px 0 0;
+      border-top: 1px solid rgba(0, 255, 136, 0.3);
+      z-index: 90;
+      animation: slideUpSheet 0.3s ease;
+      overflow: hidden;
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 2px;
+      margin: 12px auto;
+    }
+
+    @keyframes slideUpSheet {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Mobile Chat Overlay */
+    .mobile-chat-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 25, 47, 0.98);
+      z-index: 200;
+      animation: slideInRight 0.3s ease;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Mobile Media Queries */
+    @media (max-width: 767px) {
+      .sidebar {
+        display: none;
+      }
+
+      .chat-panel {
+        display: none;
+      }
+
+      .mobile-tab-bar {
+        display: flex;
+      }
+
+      .mobile-backdrop {
+        display: block;
+      }
+
+      .mobile-room-sheet {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .mobile-chat-overlay {
+        display: flex;
+      }
+
+      .main-content {
+        padding-bottom: 60px;
+      }
+
+      .top-bar {
+        padding: 0 12px;
+      }
+
+      .app-title span:not(.globe-icon) {
+        display: none;
+      }
+
+      .create-room-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+
+      .create-room-btn .plus-icon {
+        font-size: 16px;
+      }
+
+      .cancel-btn {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+    }
   `]
 })
 export class ChatLayoutComponent implements OnInit, OnDestroy {
@@ -427,6 +684,21 @@ export class ChatLayoutComponent implements OnInit, OnDestroy {
   createMode = signal(false);
   showCreateModal = signal(false);
   createCoords = signal<{ lat: number; lng: number } | null>(null);
+
+  // Mobile state
+  isMobile = signal(typeof window !== 'undefined' && window.innerWidth < 768);
+  showMobileRooms = signal(false);
+  showMobileChat = signal(false);
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.isMobile.set(window.innerWidth < 768);
+    // Close mobile panels when switching to desktop
+    if (!this.isMobile()) {
+      this.showMobileRooms.set(false);
+      this.showMobileChat.set(false);
+    }
+  }
 
   newRoom = {
     title: '',
@@ -590,5 +862,54 @@ export class ChatLayoutComponent implements OnInit, OnDestroy {
 
   onLogout(): void {
     this.authService.logout();
+  }
+
+  // Mobile methods
+  toggleMobileRooms(): void {
+    this.showMobileRooms.update(v => !v);
+    if (this.showMobileRooms()) {
+      this.showMobileChat.set(false);
+    }
+  }
+
+  toggleMobileChat(): void {
+    if (!this.activeRoom()) return;
+    this.showMobileChat.update(v => !v);
+    if (this.showMobileChat()) {
+      this.showMobileRooms.set(false);
+    }
+  }
+
+  closeMobileRooms(): void {
+    this.showMobileRooms.set(false);
+  }
+
+  closeMobileChat(): void {
+    this.showMobileChat.set(false);
+  }
+
+  onMobileRoomSelected(room: Room): void {
+    this.onRoomSelected(room);
+    this.closeMobileRooms();
+    this.showMobileChat.set(true);
+  }
+
+  onMobileJoinByCode(joinCode: string): void {
+    this.roomService.joinRoom(joinCode).subscribe(room => {
+      this.activeRoom.set(room);
+      this.closeMobileRooms();
+      this.showMobileChat.set(true);
+    });
+  }
+
+  onMobileLocateRoom(joinCode: string): void {
+    this.closeMobileRooms();
+    this.closeMobileChat();
+    this.onLocateRoom(joinCode);
+  }
+
+  onMobileCloseChat(): void {
+    this.closeMobileChat();
+    this.closeChat();
   }
 }

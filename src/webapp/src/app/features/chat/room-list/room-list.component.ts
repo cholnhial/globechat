@@ -409,6 +409,43 @@ type RoomFilter = 'all' | 'owned';
     .btn-leave:hover {
       background: rgba(255, 68, 68, 0.2);
     }
+
+    /* Mobile styles */
+    @media (max-width: 767px) {
+      .header {
+        padding: 16px;
+      }
+
+      .user-info {
+        padding: 12px 16px;
+      }
+
+      .join-section {
+        padding: 12px 16px;
+      }
+
+      .section-header {
+        padding: 12px 16px 8px;
+      }
+
+      .rooms-container {
+        padding: 0 8px 8px;
+      }
+
+      .room-item {
+        padding: 14px 12px;
+      }
+
+      .room-actions {
+        opacity: 1;
+      }
+
+      .btn-locate,
+      .btn-leave {
+        width: 36px;
+        height: 36px;
+      }
+    }
   `]
 })
 export class RoomListComponent {

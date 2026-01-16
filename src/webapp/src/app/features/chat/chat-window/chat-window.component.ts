@@ -27,7 +27,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
   standalone: true,
   imports: [FormsModule, MoodsicModalComponent],
   template: `
-    <div class="chat-window" [class.collapsed]="collapsed">
+    <div class="chat-window" [class.collapsed]="collapsed" [class.mobile]="isMobile">
       <!-- Header -->
       <div class="chat-header">
         @if (collapsed) {
@@ -35,6 +35,11 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
             💬
           </button>
         } @else {
+          @if (isMobile) {
+            <button class="btn-back" (click)="toggleCollapse.emit()" title="Minimize">
+              ▼
+            </button>
+          }
           <div class="header-info">
             <h3>{{ room.title }}</h3>
             <span class="member-count">👥 {{ roomService.members().length }}</span>
@@ -48,12 +53,14 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
             <button class="btn-icon" (click)="showMembers.set(!showMembers())" title="Members">
               👥
             </button>
-            <button class="btn-icon btn-locate" (click)="locateRoom.emit(room.joinCode)" title="Show on map">
-              🎯
-            </button>
-            <button class="btn-icon" (click)="toggleCollapse.emit()" title="Collapse">
-              ➡️
-            </button>
+            @if (!isMobile) {
+              <button class="btn-icon btn-locate" (click)="locateRoom.emit(room.joinCode)" title="Show on map">
+                🎯
+              </button>
+              <button class="btn-icon" (click)="toggleCollapse.emit()" title="Collapse">
+                ➡️
+              </button>
+            }
             <button class="btn-icon" (click)="closeChat.emit()" title="Close">
               ×
             </button>
@@ -722,6 +729,64 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
       cursor: pointer;
       border: none;
     }
+
+    /* Mobile styles */
+    .btn-back {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      margin-right: 12px;
+    }
+
+    .btn-back:hover {
+      background: rgba(0, 255, 136, 0.1);
+      border-color: rgba(0, 255, 136, 0.3);
+    }
+
+    .chat-window.mobile {
+      height: 100%;
+    }
+
+    .chat-window.mobile .chat-header {
+      padding: 12px 16px;
+      padding-top: max(12px, env(safe-area-inset-top));
+    }
+
+    .chat-window.mobile .header-info h3 {
+      font-size: 15px;
+    }
+
+    .chat-window.mobile .messages-container {
+      padding: 12px;
+    }
+
+    .chat-window.mobile .chat-input {
+      padding: 12px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
+
+    .chat-window.mobile .members-panel {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 280px;
+      z-index: 50;
+      box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .chat-window.mobile .room-controls {
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
   `]
 })
 export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterViewChecked {
@@ -736,6 +801,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
 
   @Input() room!: Room;
   @Input() collapsed = false;
+  @Input() isMobile = false;
 
   @Output() toggleCollapse = new EventEmitter<void>();
   @Output() closeChat = new EventEmitter<void>();
