@@ -109,6 +109,13 @@ type RoomFilter = 'all' | 'owned';
     </div>
   `,
   styles: [`
+    :host {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
     .room-list {
       height: 100%;
       display: flex;
