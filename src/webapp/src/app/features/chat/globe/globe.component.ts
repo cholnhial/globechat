@@ -367,6 +367,7 @@ export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
       // Click to select room
       el.addEventListener('click', (e) => {
         e.stopPropagation();
+        this.stopVibeCheck();
         this.markerClicked.emit(roomMarker);
       });
 

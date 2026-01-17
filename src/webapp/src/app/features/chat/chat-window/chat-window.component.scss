@@ -626,7 +626,7 @@
 
 .chat-window.mobile .messages-container {
   padding: 12px;
-  padding-bottom: 120px;
+  padding-bottom: 16px;
 }
 
 .chat-window.mobile .messages-container::-webkit-scrollbar {
@@ -647,14 +647,8 @@
 }
 
 .chat-window.mobile .chat-input {
-  position: fixed;
-  bottom: calc(52px + env(safe-area-inset-bottom));
-  left: 0;
-  right: 0;
   padding: 12px;
-  background: rgba(10, 25, 47, 0.98);
-  border-top: 1px solid rgba(0, 255, 136, 0.2);
-  z-index: 100;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
 
 .chat-window.mobile .members-panel {
