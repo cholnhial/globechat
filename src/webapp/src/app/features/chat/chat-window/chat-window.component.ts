@@ -348,6 +348,9 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
 
     this.chatService.sendMessage(this.room.joinCode, this.messageInput.trim());
     this.messageInput = '';
+
+    // Scroll to bottom after sending (message will arrive via WebSocket)
+    setTimeout(() => this.scrollToBottom(), 0);
   }
 
   getMessageClass(message: ChatMessage): string {

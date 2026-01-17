@@ -555,6 +555,11 @@
 .chat-window.mobile {
   height: 100%;
   width: 100%;
+  min-height: 0;
+}
+
+.chat-window.mobile .chat-body {
+  min-height: 0;
 }
 
 .chat-window.mobile .chat-header {

@@ -604,6 +604,13 @@ import { Room, RoomMarker } from '../../../core/models';
       animation: slideInRight 0.3s ease;
     }
 
+    .mobile-chat-overlay app-chat-window {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
+
     @keyframes slideInRight {
       from {
         transform: translateX(100%);
