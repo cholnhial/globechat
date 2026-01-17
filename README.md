@@ -2,6 +2,10 @@
 
 A real-time chat application where users can create and join chat rooms placed anywhere on an interactive world map.
 
+**[Live Demo: gc.chol.dev](https://gc.chol.dev)**
+
+---
+
 ## Overview
 
 GlobeChat is a weekend project built to explore WebSocket-based real-time communication with a unique twist: chat rooms are geographically placed on a 3D globe. Users can discover rooms by exploring the map, join conversations happening around the world, and even set "moodsic" (mood music) to create the perfect atmosphere for their room.
