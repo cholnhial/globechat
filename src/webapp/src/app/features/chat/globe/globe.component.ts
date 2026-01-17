@@ -9,9 +9,13 @@ import {
   OnDestroy,
   OnChanges,
   SimpleChanges,
+  inject,
+  signal,
 } from '@angular/core';
 import { Map, Marker } from 'maplibre-gl';
 import { RoomMarker } from '../../../core/models';
+import { RoomService } from '../../../core/services';
+import { MoodsicService } from '../../../core/services/moodsic.service';
 
 @Component({
   selector: 'app-globe',
@@ -202,9 +206,43 @@ import { RoomMarker } from '../../../core/models';
         bottom: 80px;
       }
     }
+
+    /* Vibe Check - Music Notes Animation */
+    :host ::ng-deep .music-notes-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    :host ::ng-deep .music-note {
+      position: absolute;
+      color: #00ff88;
+      font-size: 18px;
+      animation: float-away 1s ease-out forwards;
+      text-shadow: 0 0 8px #00ff88, 0 0 15px rgba(0, 255, 136, 0.5);
+    }
+
+    @keyframes float-away {
+      0% {
+        transform: translate(-50%, -50%);
+        opacity: 1;
+      }
+      100% {
+        transform:
+          translate(-50%, -50%)
+          rotate(var(--angle))
+          translateY(calc(-1 * var(--distance)));
+        opacity: 0;
+      }
+    }
   `]
 })
 export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
+  private roomService = inject(RoomService);
+  private moodsicService = inject(MoodsicService);
+
   @ViewChild('mapContainer') mapContainer!: ElementRef;
 
   @Input() markers: RoomMarker[] = [];
@@ -218,11 +256,21 @@ export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
   private map!: Map;
   private mapMarkers = new window.Map<string, Marker>();
 
+  // Vibe Check state
+  private readonly HOVER_DELAY_MS = 300;
+  private readonly MAX_PLAY_DURATION = 10000;
+  private previewAudio: HTMLAudioElement | null = null;
+  private vibeCheckMarker = signal<string | null>(null);
+  private hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+  private maxPlayTimeout: ReturnType<typeof setTimeout> | null = null;
+  private noteInterval: ReturnType<typeof setInterval> | null = null;
+
   ngAfterViewInit(): void {
     this.initMap();
   }
 
   ngOnDestroy(): void {
+    this.stopVibeCheck();
     if (this.map) {
       this.map.remove();
     }
@@ -313,12 +361,19 @@ export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
             <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
           </svg>
         </div>
+        <div class="music-notes-container"></div>
       `;
 
+      // Click to select room
       el.addEventListener('click', (e) => {
         e.stopPropagation();
         this.markerClicked.emit(roomMarker);
       });
+
+      // Vibe check: hover/hold to preview moodsic
+      el.addEventListener('pointerenter', () => this.startVibeCheck(roomMarker));
+      el.addEventListener('pointerleave', () => this.stopVibeCheck());
+      el.addEventListener('pointercancel', () => this.stopVibeCheck());
 
       const marker = new Marker({ element: el })
         .setLngLat([roomMarker.longitude, roomMarker.latitude])
@@ -387,5 +442,81 @@ export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
         }
       }
     }, 1000);
+  }
+
+  // Vibe Check Methods
+  private startVibeCheck(marker: RoomMarker): void {
+    this.hoverTimeout = setTimeout(() => {
+      this.playVibeCheck(marker);
+    }, this.HOVER_DELAY_MS);
+  }
+
+  private stopVibeCheck(): void {
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
+      this.hoverTimeout = null;
+    }
+    if (this.maxPlayTimeout) {
+      clearTimeout(this.maxPlayTimeout);
+      this.maxPlayTimeout = null;
+    }
+    if (this.noteInterval) {
+      clearInterval(this.noteInterval);
+      this.noteInterval = null;
+    }
+    this.stopPreviewAudio();
+    this.vibeCheckMarker.set(null);
+  }
+
+  private playVibeCheck(marker: RoomMarker): void {
+    this.roomService.getRoom(marker.joinCode).subscribe(room => {
+      if (room.currentMoodsic) {
+        this.vibeCheckMarker.set(marker.joinCode);
+        this.playPreviewAudio(room.currentMoodsic.id);
+        this.spawnMusicNotes(marker.joinCode);
+
+        // Auto-stop after max duration
+        this.maxPlayTimeout = setTimeout(() => {
+          this.stopVibeCheck();
+        }, this.MAX_PLAY_DURATION);
+      }
+    });
+  }
+
+  private playPreviewAudio(moodsicId: number): void {
+    this.stopPreviewAudio();
+    this.previewAudio = new Audio(this.moodsicService.getStreamUrl(moodsicId));
+    this.previewAudio.volume = 0.5;
+    this.previewAudio.play().catch(() => {});
+  }
+
+  private stopPreviewAudio(): void {
+    if (this.previewAudio) {
+      this.previewAudio.pause();
+      this.previewAudio.src = '';
+      this.previewAudio = null;
+    }
+  }
+
+  private spawnMusicNotes(joinCode: string): void {
+    const marker = this.mapMarkers.get(joinCode);
+    if (!marker) return;
+
+    const container = marker.getElement().querySelector('.music-notes-container');
+    if (!container) return;
+
+    const notes = ['♪', '♫', '♬'];
+
+    this.noteInterval = setInterval(() => {
+      const note = document.createElement('div');
+      note.className = 'music-note';
+      note.textContent = notes[Math.floor(Math.random() * notes.length)];
+      note.style.setProperty('--angle', `${Math.random() * 360}deg`);
+      note.style.setProperty('--distance', `${40 + Math.random() * 30}px`);
+      container.appendChild(note);
+
+      // Remove after animation completes
+      setTimeout(() => note.remove(), 1000);
+    }, 150);
   }
 }
