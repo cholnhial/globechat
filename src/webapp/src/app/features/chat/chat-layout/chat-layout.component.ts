@@ -640,6 +640,7 @@ import { Room, RoomMarker } from '../../../core/models';
 
       .mobile-chat-overlay {
         display: flex;
+        flex-direction: column;
       }
 
       .main-content {

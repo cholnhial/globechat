@@ -424,7 +424,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
     .members-panel {
       width: 200px;
       border-left: 1px solid rgba(0, 255, 136, 0.2);
-      background: rgba(0, 0, 0, 0.2);
+      background: rgba(10, 25, 47, 0.95);
       display: flex;
       flex-direction: column;
     }
@@ -755,6 +755,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
 
     .chat-window.mobile {
       height: 100%;
+      width: 100%;
     }
 
     .chat-window.mobile .chat-header {
@@ -783,6 +784,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
       width: 280px;
       z-index: 50;
       box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+      background: rgba(10, 25, 47, 0.98);
     }
 
     .chat-window.mobile .room-controls {

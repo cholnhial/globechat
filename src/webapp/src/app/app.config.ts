@@ -13,6 +13,7 @@ import {
   Folder,
   Upload,
   Search,
+  LogIn,
   LogOut,
   Users,
   Target,
@@ -23,7 +24,8 @@ import {
   Plug,
   UserX,
   Square,
-  Send
+  Send,
+  Trash2
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -49,6 +51,7 @@ export const appConfig: ApplicationConfig = {
         Folder,
         Upload,
         Search,
+        LogIn,
         LogOut,
         Users,
         Target,
@@ -59,7 +62,8 @@ export const appConfig: ApplicationConfig = {
         Plug,
         UserX,
         Square,
-        Send
+        Send,
+        Trash2
       })
     )
   ]

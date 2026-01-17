@@ -372,8 +372,23 @@ import { ToastService } from '../../../core/services/toast.service';
       color: #fff;
     }
 
+    .search-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      color: rgba(255, 255, 255, 0.4);
+      pointer-events: none;
+    }
+
     .search-input {
-      padding: 12px 16px;
+      width: 100%;
+      padding: 12px 16px 12px 40px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 8px;
@@ -390,7 +405,9 @@ import { ToastService } from '../../../core/services/toast.service';
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-height: 200px;
+      flex: 1;
+      min-height: 0;
+      max-height: 300px;
       overflow-y: auto;
     }
 
