@@ -78,7 +78,7 @@
 .btn-expand {
   width: 100%;
   height: 50px;
-  background: rgba(0, 255, 136, 0.1);
+  background: transparent;
   border: none;
   cursor: pointer;
   color: var(--neon-green, #00ff88);
@@ -89,14 +89,15 @@
 }
 
 .btn-expand:hover {
-  background: rgba(0, 255, 136, 0.2);
+  background: rgba(0, 255, 136, 0.05);
+  border-color: rgba(0, 255, 136, 0.5);
   box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
 }
 
 .chat-body {
   flex: 1;
   display: flex;
-  overflow: hidden;
+  min-height: 0;
   position: relative;
 }
 
