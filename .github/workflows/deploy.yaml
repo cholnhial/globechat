@@ -1,0 +1,109 @@
+name: Deploy to Linode
+
+on:
+  workflow_dispatch:
+
+env:
+  APP_NAME: globechat
+  DEPLOY_PATH: /opt/globechat
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '25'
+          distribution: 'graalvm'
+
+      - name: Build native binary
+        run: ./mvnw clean package -Pnative -DskipTests
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: globechat-native
+          path: target/globechat
+          retention-days: 1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: globechat-native
+
+      - name: Copy binary to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: globechat
+          target: ${{ env.DEPLOY_PATH }}/
+
+      - name: Deploy and restart service
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: DB_URL,DB_USER,DB_PASSWORD,JWT_SECRET
+          script: |
+            set -e
+
+            # Make binary executable
+            chmod +x /opt/globechat/globechat
+
+            # Create moodsic uploads directory
+            mkdir -p /opt/globechat/moodsic-uploads
+
+            # Create environment file (secure permissions)
+            cat > /opt/globechat/.env << EOF
+            SPRING_PROFILES_ACTIVE=prod
+            DB_URL=${DB_URL}
+            DB_USER=${DB_USER}
+            DB_PASSWORD=${DB_PASSWORD}
+            JWT_SECRET=${JWT_SECRET}
+            EOF
+            chmod 600 /opt/globechat/.env
+
+            # Create systemd service
+            cat > /etc/systemd/system/globechat.service << 'SYSTEMD'
+            [Unit]
+            Description=GlobeChat Application
+            After=network.target postgresql.service
+
+            [Service]
+            Type=simple
+            User=root
+            WorkingDirectory=/opt/globechat
+            EnvironmentFile=/opt/globechat/.env
+            ExecStart=/opt/globechat/globechat
+            Restart=always
+            RestartSec=10
+            StandardOutput=journal
+            StandardError=journal
+
+            [Install]
+            WantedBy=multi-user.target
+            SYSTEMD
+
+            # Reload and restart
+            systemctl daemon-reload
+            systemctl enable globechat
+            systemctl restart globechat
+
+            # Wait and check status
+            sleep 5
+            systemctl is-active globechat
