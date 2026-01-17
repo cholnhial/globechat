@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Moodsic } from '../../../core/models';
@@ -18,13 +19,13 @@ import { ToastService } from '../../../core/services/toast.service';
 @Component({
   selector: 'app-moodsic-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LucideAngularModule],
   template: `
     <div class="modal-overlay" (click)="onOverlayClick($event)">
       <div class="modal-content">
         <div class="modal-header">
-          <h2>🎵 Room Moodsic</h2>
-          <button class="btn-close" (click)="close.emit()">×</button>
+          <h2><lucide-icon name="music" [size]="24"></lucide-icon> Room Moodsic</h2>
+          <button class="btn-close" (click)="close.emit()"><lucide-icon name="x" [size]="20"></lucide-icon></button>
         </div>
 
         <div class="modal-body">
@@ -40,7 +41,11 @@ import { ToastService } from '../../../core/services/toast.service';
                   #fileInput
                 />
                 <button class="btn-file" (click)="fileInput.click()">
-                  {{ selectedFile ? selectedFile.name : '📁 Choose Audio File' }}
+                  @if (selectedFile) {
+                    {{ selectedFile.name }}
+                  } @else {
+                    <lucide-icon name="folder" [size]="16"></lucide-icon> Choose Audio File
+                  }
                 </button>
               </div>
 
@@ -68,7 +73,11 @@ import { ToastService } from '../../../core/services/toast.service';
                 (click)="uploadTrack()"
                 [disabled]="!canUpload() || isUploading()"
               >
-                {{ isUploading() ? 'Uploading...' : '⬆️ Upload & Play' }}
+                @if (isUploading()) {
+                  Uploading...
+                } @else {
+                  <lucide-icon name="upload" [size]="16"></lucide-icon> Upload & Play
+                }
               </button>
             </div>
           </div>
@@ -96,13 +105,16 @@ import { ToastService } from '../../../core/services/toast.service';
               </button>
             </div>
 
-            <input
-              type="text"
-              [(ngModel)]="searchQuery"
-              (ngModelChange)="onSearchChange($event)"
-              placeholder="🔍 Search tracks..."
-              class="search-input"
-            />
+            <div class="search-wrapper">
+              <lucide-icon name="search" [size]="16" class="search-icon"></lucide-icon>
+              <input
+                type="text"
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearchChange($event)"
+                placeholder="Search tracks..."
+                class="search-input"
+              />
+            </div>
           </div>
 
           <!-- Track List -->
@@ -119,7 +131,7 @@ import { ToastService } from '../../../core/services/toast.service';
                     <span class="track-uploader">by {{ track.uploadedBy.username }}</span>
                   </div>
                   <button class="btn-set-mood" (click)="selectTrack(track)">
-                    🎵 Set as Mood
+                    <lucide-icon name="music" [size]="14"></lucide-icon> Set as Mood
                   </button>
                 </div>
               }

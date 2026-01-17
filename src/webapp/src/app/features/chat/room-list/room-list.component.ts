@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { Room } from '../../../core/models';
 import { AuthService } from '../../../core/services';
 
@@ -8,17 +9,17 @@ type RoomFilter = 'all' | 'owned';
 @Component({
   selector: 'app-room-list',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, LucideAngularModule],
   template: `
     <div class="room-list">
       <!-- Header -->
       <div class="header">
         <div class="logo">
-          <span class="logo-icon">🌐</span>
+          <lucide-icon name="globe" [size]="28" class="logo-icon"></lucide-icon>
           <span class="logo-text">GlobeChat</span>
         </div>
         <button class="btn-icon" (click)="logout.emit()" title="Logout">
-          🚪
+          <lucide-icon name="log-out" [size]="20"></lucide-icon>
         </button>
       </div>
 
@@ -62,7 +63,7 @@ type RoomFilter = 'all' | 'owned';
       <div class="rooms-container">
         @if (filteredRooms.length === 0) {
           <div class="empty-state">
-            <span>🔍</span>
+            <lucide-icon name="search" [size]="48"></lucide-icon>
             @if (filter() === 'owned') {
               <p>No owned rooms</p>
               <small>Create a room to see it here</small>
@@ -78,11 +79,11 @@ type RoomFilter = 'all' | 'owned';
               [class.active]="activeRoomCode === room.joinCode"
               (click)="roomSelected.emit(room)"
             >
-              <div class="room-icon">💬</div>
+              <div class="room-icon"><lucide-icon name="message-circle" [size]="24"></lucide-icon></div>
               <div class="room-info">
                 <div class="room-title">{{ room.title }}</div>
                 <div class="room-meta">
-                  <span class="member-count">👥 {{ room.memberCount }}</span>
+                  <span class="member-count"><lucide-icon name="users" [size]="12"></lucide-icon> {{ room.memberCount }}</span>
                   <span class="join-code">{{ room.joinCode }}</span>
                 </div>
               </div>
@@ -92,14 +93,14 @@ type RoomFilter = 'all' | 'owned';
                   (click)="onLocateRoom($event, room.joinCode)"
                   title="Show on map"
                 >
-                  🎯
+                  <lucide-icon name="target" [size]="14"></lucide-icon>
                 </button>
                 <button
                   class="btn-leave"
                   (click)="onLeaveRoom($event, room.joinCode)"
                   title="Leave room"
                 >
-                  ×
+                  <lucide-icon name="x" [size]="18"></lucide-icon>
                 </button>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { Component, Input, Output, EventEmitter, inject, OnInit } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
 import { RoomMarker } from '../../../core/models';
 import { RoomService } from '../../../core/services';
 import { formatDistanceToNow } from 'date-fns';
@@ -6,13 +7,16 @@ import { formatDistanceToNow } from 'date-fns';
 @Component({
   selector: 'app-room-info-card',
   standalone: true,
+  imports: [LucideAngularModule],
   template: `
     <div class="card-overlay" (click)="close.emit()">
       <div class="info-card" (click)="$event.stopPropagation()">
-        <button class="close-btn" (click)="close.emit()">×</button>
+        <button class="close-btn" (click)="close.emit()">
+          <lucide-icon name="x" [size]="20"></lucide-icon>
+        </button>
 
         <div class="card-header">
-          <span class="room-icon">💬</span>
+          <span class="room-icon"><lucide-icon name="message-circle" [size]="48"></lucide-icon></span>
           <h2>{{ marker.title }}</h2>
         </div>
 
@@ -24,19 +28,19 @@ import { formatDistanceToNow } from 'date-fns';
 
             @if (room()!.rules) {
               <div class="rules">
-                <h4>📋 Rules</h4>
+                <h4><lucide-icon name="file-text" [size]="14"></lucide-icon> Rules</h4>
                 <div class="rules-content">{{ room()!.rules }}</div>
               </div>
             }
 
             <div class="stats">
               <div class="stat">
-                <span class="stat-icon">👥</span>
+                <span class="stat-icon"><lucide-icon name="users" [size]="24"></lucide-icon></span>
                 <span class="stat-value">{{ marker.memberCount }}</span>
                 <span class="stat-label">Members</span>
               </div>
               <div class="stat">
-                <span class="stat-icon">⏱️</span>
+                <span class="stat-icon"><lucide-icon name="clock" [size]="24"></lucide-icon></span>
                 <span class="stat-value">{{ getUptime() }}</span>
                 <span class="stat-label">Active</span>
               </div>

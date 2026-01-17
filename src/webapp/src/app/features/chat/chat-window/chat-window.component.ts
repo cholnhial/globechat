@@ -14,6 +14,7 @@ import {
   AfterViewChecked,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { Room, RoomMember, ChatMessage, MemberRole, Moodsic } from '../../../core/models';
 import { RoomService, ChatService, AuthService, ToastService } from '../../../core/services';
 import { MoodsicService } from '../../../core/services/moodsic.service';
@@ -25,44 +26,44 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [FormsModule, MoodsicModalComponent],
+  imports: [FormsModule, LucideAngularModule, MoodsicModalComponent],
   template: `
     <div class="chat-window" [class.collapsed]="collapsed" [class.mobile]="isMobile">
       <!-- Header -->
       <div class="chat-header">
         @if (collapsed) {
           <button class="btn-expand" (click)="toggleCollapse.emit()">
-            💬
+            <lucide-icon name="message-circle" [size]="24"></lucide-icon>
           </button>
         } @else {
           @if (isMobile) {
             <button class="btn-back" (click)="toggleCollapse.emit()" title="Minimize">
-              ▼
+              <lucide-icon name="chevron-down" [size]="20"></lucide-icon>
             </button>
           }
           <div class="header-info">
             <h3>{{ room.title }}</h3>
-            <span class="member-count">👥 {{ roomService.members().length }}</span>
+            <span class="member-count"><lucide-icon name="users" [size]="14"></lucide-icon> {{ roomService.members().length }}</span>
           </div>
           <div class="header-actions">
             @if (userRole() === 'OWNER') {
               <button class="btn-icon btn-moodsic" (click)="showMoodsicModal.set(true)" title="Room Moodsic">
-                🎵
+                <lucide-icon name="music" [size]="18"></lucide-icon>
               </button>
             }
             <button class="btn-icon" (click)="showMembers.set(!showMembers())" title="Members">
-              👥
+              <lucide-icon name="users" [size]="18"></lucide-icon>
             </button>
             @if (!isMobile) {
               <button class="btn-icon btn-locate" (click)="locateRoom.emit(room.joinCode)" title="Show on map">
-                🎯
+                <lucide-icon name="target" [size]="18"></lucide-icon>
               </button>
               <button class="btn-icon" (click)="toggleCollapse.emit()" title="Collapse">
-                ➡️
+                <lucide-icon name="arrow-right" [size]="18"></lucide-icon>
               </button>
             }
             <button class="btn-icon" (click)="closeChat.emit()" title="Close">
-              ×
+              <lucide-icon name="x" [size]="18"></lucide-icon>
             </button>
           </div>
         }
@@ -74,7 +75,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
           <div class="messages-container" #messagesContainer>
             @if (isDisconnected()) {
               <div class="disconnected-banner">
-                <span class="disconnect-icon">🔌</span>
+                <lucide-icon name="plug" [size]="24" class="disconnect-icon"></lucide-icon>
                 <span>Room has been destroyed</span>
               </div>
             }
@@ -94,7 +95,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
                   <div class="message-content">{{ message.content }}</div>
                 } @else {
                   <div class="system-message">
-                    <span class="system-icon">{{ getSystemIcon(message.type) }}</span>
+                    <lucide-icon [name]="getSystemIcon(message.type)" [size]="16" class="system-icon"></lucide-icon>
                     <span>{{ message.content }}</span>
                   </div>
                 }
@@ -107,7 +108,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
             <div class="members-panel">
               <div class="members-header">
                 <h4>Members</h4>
-                <button class="btn-close" (click)="showMembers.set(false)">×</button>
+                <button class="btn-close" (click)="showMembers.set(false)"><lucide-icon name="x" [size]="18"></lucide-icon></button>
               </div>
               <div class="members-list">
                 @for (member of roomService.members(); track member.user.id) {
@@ -121,7 +122,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
                     </div>
                     @if (canKick(member)) {
                       <button class="btn-kick" (click)="kickMember(member)" title="Kick">
-                        👢
+                        <lucide-icon name="user-x" [size]="16"></lucide-icon>
                       </button>
                     }
                   </div>
@@ -135,7 +136,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
         @if (room.currentMoodsic) {
           <div class="now-playing-notch">
             <div class="now-playing-info">
-              <span class="music-icon">🎵</span>
+              <lucide-icon name="music" [size]="18" class="music-icon"></lucide-icon>
               <div class="track-title-container">
                 <span class="track-title" [class.scrolling]="room.currentMoodsic.name.length > 25">
                   {{ room.currentMoodsic.name }}
@@ -144,7 +145,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
             </div>
             <div class="player-controls">
               <button class="btn-player" (click)="togglePlayPause()" [title]="isPlaying() ? 'Pause' : 'Play'">
-                {{ isPlaying() ? '⏸️' : '▶️' }}
+                <lucide-icon [name]="isPlaying() ? 'pause' : 'play'" [size]="14"></lucide-icon>
               </button>
               <input
                 type="range"
@@ -157,11 +158,11 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
                 title="Volume"
               />
               <button class="btn-player" (click)="toggleMute()" [title]="isMuted() ? 'Unmute' : 'Mute'">
-                {{ isMuted() ? '🔇' : '🔊' }}
+                <lucide-icon [name]="isMuted() ? 'volume-x' : 'volume-2'" [size]="14"></lucide-icon>
               </button>
               @if (userRole() === 'OWNER') {
                 <button class="btn-player btn-stop" (click)="clearMoodsic()" title="Stop Music">
-                  🛑
+                  <lucide-icon name="square" [size]="14"></lucide-icon>
                 </button>
               }
             </div>
@@ -184,7 +185,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
             [disabled]="isDisconnected()"
           />
           <button class="btn-send" (click)="sendMessage()" [disabled]="!messageInput.trim() || isDisconnected()">
-            📤
+            <lucide-icon name="send" [size]="20"></lucide-icon>
           </button>
         </div>
 
@@ -192,7 +193,7 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
         @if (userRole() === 'OWNER') {
           <div class="room-controls">
             <button class="btn-control btn-danger" (click)="destroyRoom()">
-              🗑️ Destroy Room
+              <lucide-icon name="trash-2" [size]="16"></lucide-icon> Destroy Room
             </button>
           </div>
         }
@@ -948,16 +949,16 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
 
   getSystemIcon(type: string): string {
     const icons: Record<string, string> = {
-      JOIN: '➡️',
-      LEAVE: '⬅️',
-      KICK: '👢',
-      BAN: '🚫',
-      MOODSIC_CHANGE: '🎵',
-      MOODSIC_TOGGLE: '⏯️',
-      ROOM_DESTROYED: '💥',
-      SYSTEM: 'ℹ️',
+      JOIN: 'log-in',
+      LEAVE: 'log-out',
+      KICK: 'user-x',
+      BAN: 'ban',
+      MOODSIC_CHANGE: 'music',
+      MOODSIC_TOGGLE: 'play',
+      ROOM_DESTROYED: 'zap',
+      SYSTEM: 'info',
     };
-    return icons[type] || 'ℹ️';
+    return icons[type] || 'info';
   }
 
   getMemberRole(username: string | undefined): string | null {
@@ -968,8 +969,8 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
 
   getRoleLabel(role: string): string {
     const labels: Record<string, string> = {
-      OWNER: '👑 Owner',
-      MOD: '🛡️ Mod',
+      OWNER: 'Owner',
+      MOD: 'Mod',
       CHATTER: 'Member',
     };
     return labels[role] || role;

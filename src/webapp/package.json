@@ -34,6 +34,7 @@
     "@angular/router": "^21.1.0",
     "@stomp/stompjs": "^7.2.1",
     "date-fns": "^4.1.0",
+    "lucide-angular": "^0.562.0",
     "maplibre-gl": "^5.16.0",
     "rxjs": "~7.8.0",
     "sockjs-client": "^1.6.1",

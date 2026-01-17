@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject, signal, computed, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { RoomListComponent } from '../room-list/room-list.component';
 import { GlobeComponent } from '../globe/globe.component';
 import { ChatWindowComponent } from '../chat-window/chat-window.component';
@@ -11,7 +12,7 @@ import { Room, RoomMarker } from '../../../core/models';
 @Component({
   selector: 'app-chat-layout',
   standalone: true,
-  imports: [CommonModule, FormsModule, RoomListComponent, GlobeComponent, ChatWindowComponent, RoomInfoCardComponent],
+  imports: [CommonModule, FormsModule, LucideAngularModule, RoomListComponent, GlobeComponent, ChatWindowComponent, RoomInfoCardComponent],
   template: `
     <div class="chat-layout">
       <!-- Left Panel - Room List -->
@@ -32,17 +33,17 @@ import { Room, RoomMarker } from '../../../core/models';
         <!-- Top Bar with CREATE ROOM button -->
         <div class="top-bar">
           <div class="app-title">
-            <span class="globe-icon">🌐</span>
+            <lucide-icon name="globe" [size]="24" class="globe-icon"></lucide-icon>
             <span>GlobeChat</span>
           </div>
           @if (!createMode()) {
             <button class="create-room-btn" (click)="enterCreateMode()">
-              <span class="plus-icon">+</span>
+              <lucide-icon name="plus" [size]="18" class="plus-icon"></lucide-icon>
               CREATE ROOM
             </button>
           } @else {
             <button class="cancel-btn" (click)="cancelCreateMode()">
-              <span class="x-icon">✕</span>
+              <lucide-icon name="x" [size]="18" class="x-icon"></lucide-icon>
               CANCEL
             </button>
           }
@@ -74,7 +75,7 @@ import { Room, RoomMarker } from '../../../core/models';
             <div class="create-room-modal" (click)="$event.stopPropagation()">
               <div class="modal-header">
                 <h2>Create New Room</h2>
-                <button class="close-btn" (click)="cancelCreateMode()">✕</button>
+                <button class="close-btn" (click)="cancelCreateMode()"><lucide-icon name="x" [size]="20"></lucide-icon></button>
               </div>
               <form (ngSubmit)="submitCreateRoom()">
                 <div class="form-group">
@@ -109,7 +110,7 @@ import { Room, RoomMarker } from '../../../core/models';
                   ></textarea>
                 </div>
                 <div class="location-info">
-                  <span class="location-icon">📍</span>
+                  <lucide-icon name="map-pin" [size]="18" class="location-icon"></lucide-icon>
                   <span>Location: {{ createCoords()?.lat?.toFixed(4) }}, {{ createCoords()?.lng?.toFixed(4) }}</span>
                 </div>
                 <div class="modal-actions">
@@ -144,7 +145,7 @@ import { Room, RoomMarker } from '../../../core/models';
           [class.active]="showMobileRooms()"
           (click)="toggleMobileRooms()"
         >
-          <span class="tab-icon">🏠</span>
+          <lucide-icon name="home" [size]="20" class="tab-icon"></lucide-icon>
           <span class="tab-label">Rooms</span>
           @if (roomService.rooms().length > 0) {
             <span class="tab-badge">{{ roomService.rooms().length }}</span>
@@ -157,7 +158,7 @@ import { Room, RoomMarker } from '../../../core/models';
           (click)="toggleMobileChat()"
           [disabled]="!activeRoom()"
         >
-          <span class="tab-icon">💬</span>
+          <lucide-icon name="message-circle" [size]="20" class="tab-icon"></lucide-icon>
           <span class="tab-label">Chat</span>
         </button>
       </nav>

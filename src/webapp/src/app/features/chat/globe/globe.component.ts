@@ -30,7 +30,13 @@ import { RoomMarker } from '../../../core/models';
         </button>
         <button (click)="zoomIn()" title="Zoom in">+</button>
         <button (click)="zoomOut()" title="Zoom out">−</button>
-        <button (click)="resetView()" title="Reset view">🌐</button>
+        <button (click)="resetView()" title="Reset view">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
+            <path d="M2 12h20"/>
+          </svg>
+        </button>
       </div>
       @if (createMode) {
         <div class="create-mode-hint">
@@ -292,7 +298,9 @@ export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {
       el.className = 'room-marker';
       el.innerHTML = `
         <div class="marker-container ${this.selectedMarker?.joinCode === roomMarker.joinCode ? 'selected' : ''}">
-          💬
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>
+          </svg>
         </div>
       `;
 
