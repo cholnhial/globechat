@@ -11,7 +11,8 @@ import {
   signal,
   ViewChild,
   ElementRef,
-  AfterViewChecked,
+  Injector,
+  afterNextRender,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
@@ -214,12 +215,13 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
     }
   `
 })
-export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterViewChecked {
+export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges {
   roomService = inject(RoomService);
   private chatService = inject(ChatService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
   private moodsicService = inject(MoodsicService);
+  private injector = inject(Injector);
 
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
   @ViewChild('audioPlayer') audioPlayer!: ElementRef<HTMLAudioElement>;
@@ -249,7 +251,6 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
   private chatSubscription?: Subscription;
   private refreshSubscription?: Subscription;
   private refreshMembersSubject = new Subject<void>();
-  private shouldScrollToBottom = true;
 
   ngOnInit(): void {
     this.loadMessages();
@@ -283,17 +284,10 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
     }
   }
 
-  ngAfterViewChecked(): void {
-    if (this.shouldScrollToBottom) {
-      this.scrollToBottom();
-      this.shouldScrollToBottom = false;
-    }
-  }
-
   private loadMessages(): void {
     this.roomService.getMessages(this.room.joinCode).subscribe(msgs => {
       this.messages.set(msgs);
-      this.shouldScrollToBottom = true;
+      this.scheduleScrollToBottom();
     });
   }
 
@@ -337,8 +331,14 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
       }
 
       this.messages.update(msgs => [...msgs, message]);
-      this.shouldScrollToBottom = true;
+      this.scheduleScrollToBottom();
     });
+  }
+
+  private scheduleScrollToBottom(): void {
+    afterNextRender(() => {
+      this.scrollToBottom();
+    }, { injector: this.injector });
   }
 
   private scrollToBottom(): void {
@@ -354,8 +354,8 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
     this.chatService.sendMessage(this.room.joinCode, this.messageInput.trim());
     this.messageInput = '';
 
-    // Scroll to bottom after sending (message will arrive via WebSocket)
-    setTimeout(() => this.scrollToBottom(), 0);
+    // Scroll will happen when message arrives via WebSocket, but schedule one anyway
+    this.scheduleScrollToBottom();
   }
 
   getMessageClass(message: ChatMessage): string {
