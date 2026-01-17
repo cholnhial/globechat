@@ -191,6 +191,17 @@ import { RoomMarker } from '../../../core/models';
         transform: scale(1.3);
       }
     }
+
+    /* Mobile styles - clear the tab bar */
+    @media (max-width: 767px) {
+      .map-controls {
+        bottom: 80px;
+      }
+
+      .create-mode-hint {
+        bottom: 80px;
+      }
+    }
   `]
 })
 export class GlobeComponent implements AfterViewInit, OnDestroy, OnChanges {

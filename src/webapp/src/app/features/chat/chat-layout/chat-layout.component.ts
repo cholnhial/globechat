@@ -830,6 +830,9 @@ export class ChatLayoutComponent implements OnInit, OnDestroy {
     const room = this.roomService.rooms().find(r => r.joinCode === joinCode);
     if (room) {
       this.onRoomSelected(room);
+      if (this.isMobile()) {
+        this.showMobileChat.set(true);
+      }
     }
     this.showInfoCard.set(false);
   }

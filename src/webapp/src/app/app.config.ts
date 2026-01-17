@@ -25,7 +25,12 @@ import {
   UserX,
   Square,
   Send,
-  Trash2
+  Trash2,
+  Play,
+  Pause,
+  Volume2,
+  VolumeX,
+  MoreVertical
 } from 'lucide-angular';
 
 import { routes } from './app.routes';
@@ -63,7 +68,12 @@ export const appConfig: ApplicationConfig = {
         UserX,
         Square,
         Send,
-        Trash2
+        Trash2,
+        Play,
+        Pause,
+        Volume2,
+        VolumeX,
+        MoreVertical
       })
     )
   ]

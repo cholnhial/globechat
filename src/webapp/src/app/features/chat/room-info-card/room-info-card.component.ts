@@ -270,6 +270,19 @@ import { formatDistanceToNow } from 'date-fns';
       transform: translateY(-2px);
       box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
     }
+
+    /* Mobile styles */
+    @media (max-width: 767px) {
+      .card-overlay {
+        align-items: flex-start;
+        padding-top: 60px;
+        padding-bottom: 70px;
+      }
+
+      .info-card {
+        max-height: calc(100vh - 140px);
+      }
+    }
   `]
 })
 export class RoomInfoCardComponent implements OnInit {

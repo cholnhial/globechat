@@ -53,6 +53,59 @@
   border-color: rgba(0, 255, 136, 0.3);
 }
 
+/* Dropdown Menu */
+.menu-container {
+  position: relative;
+}
+
+.btn-menu {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.btn-menu:hover {
+  color: #fff;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: rgba(10, 25, 47, 0.98);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+  border-radius: 10px;
+  min-width: 160px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.menu-item.danger {
+  color: #ff4444;
+}
+
+.menu-item.danger:hover {
+  background: rgba(255, 68, 68, 0.1);
+}
+
 .btn-icon.btn-locate {
   color: #00d4ff;
   border-color: rgba(0, 212, 255, 0.3);

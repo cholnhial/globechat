@@ -51,6 +51,19 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
               <button class="btn-icon btn-moodsic" (click)="showMoodsicModal.set(true)" title="Room Moodsic">
                 <lucide-icon name="music" [size]="18"></lucide-icon>
               </button>
+              <div class="menu-container">
+                <button class="btn-icon btn-menu" (click)="toggleMenu($event)" title="Room options">
+                  <lucide-icon name="more-vertical" [size]="18"></lucide-icon>
+                </button>
+                @if (showMenu()) {
+                  <div class="dropdown-menu">
+                    <button class="menu-item danger" (click)="destroyRoom()">
+                      <lucide-icon name="trash-2" [size]="16"></lucide-icon>
+                      Destroy Room
+                    </button>
+                  </div>
+                }
+              </div>
             }
             <button class="btn-icon" (click)="showMembers.set(!showMembers())" title="Members">
               <lucide-icon name="users" [size]="18"></lucide-icon>
@@ -189,15 +202,6 @@ import { MoodsicModalComponent } from '../moodsic-modal/moodsic-modal.component'
             <lucide-icon name="send" [size]="20"></lucide-icon>
           </button>
         </div>
-
-        <!-- Room Controls (for owner/mod) -->
-        @if (userRole() === 'OWNER') {
-          <div class="room-controls">
-            <button class="btn-control btn-danger" (click)="destroyRoom()">
-              <lucide-icon name="trash-2" [size]="16"></lucide-icon> Destroy Room
-            </button>
-          </div>
-        }
       }
     </div>
 
@@ -234,6 +238,7 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
   showMembers = signal(false);
   isDisconnected = signal(false);
   showMoodsicModal = signal(false);
+  showMenu = signal(false);
   isPlaying = signal(false);
   volume = signal(0.7);
   isMuted = signal(false);
@@ -428,7 +433,13 @@ export class ChatWindowComponent implements OnInit, OnDestroy, OnChanges, AfterV
     });
   }
 
+  toggleMenu(event: Event): void {
+    event.stopPropagation();
+    this.showMenu.update(v => !v);
+  }
+
   destroyRoom(): void {
+    this.showMenu.set(false);
     if (confirm('Are you sure you want to destroy this room? This cannot be undone.')) {
       this.roomService.deleteRoom(this.room.joinCode).subscribe(() => {
         this.closeChat.emit();

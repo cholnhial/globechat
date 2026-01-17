@@ -1,7 +1,9 @@
 name: Deploy to Linode
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 env:
   APP_NAME: globechat
