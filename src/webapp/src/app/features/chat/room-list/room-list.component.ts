@@ -18,7 +18,7 @@ type RoomFilter = 'all' | 'owned';
           <lucide-icon name="globe" [size]="28" class="logo-icon"></lucide-icon>
           <span class="logo-text">GlobeChat</span>
         </div>
-        <button class="btn-icon" (click)="logout.emit()" title="Logout">
+        <button class="btn-icon" (click)="logout.emit()" title="Logout" aria-label="Logout">
           <lucide-icon name="log-out" [size]="20"></lucide-icon>
         </button>
       </div>
@@ -151,16 +151,24 @@ type RoomFilter = 'all' | 'owned';
     }
 
     .btn-icon {
-      background: none;
-      border: none;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.88);
       font-size: 20px;
       cursor: pointer;
-      opacity: 0.7;
-      transition: opacity 0.2s;
+      transition: all 0.2s;
     }
 
     .btn-icon:hover {
-      opacity: 1;
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.28);
+      color: #fff;
     }
 
     .user-info {
